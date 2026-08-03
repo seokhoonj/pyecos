@@ -57,9 +57,9 @@ class _Transport:
         retries: int = _TRANSIENT_RETRIES,
     ) -> None:
         self._client = client
-        self._delay = delay_seconds
+        self._delay_seconds = delay_seconds
         self._retries = retries
-        self._next_slot = 0.0
+        self._next_request_at = 0.0
 
     def request_page(
         self,
@@ -88,7 +88,10 @@ class _Transport:
                 response.raise_for_status()
                 payload = response.json()
             except httpx.HTTPStatusError as err:
-                if err.response.status_code < 500:  # a 4xx is the server's answer
+                status = err.response.status_code
+                if status == 429:  # an HTTP-level rate limit, should ECOS send one
+                    raise ECOSRateLimitError("ERROR-602", str(err)) from err
+                if status < 500:  # any other 4xx is the server's answer
                     raise ECOSNetworkError(str(err)) from err
                 last_error = ECOSNetworkError(str(err))  # 5xx -- retry
             except httpx.HTTPError as err:  # timeout, connection reset, ...
@@ -105,12 +108,12 @@ class _Transport:
         raise last_error if last_error else ECOSNetworkError("request failed")
 
     def _wait_for_next_slot(self) -> None:
-        if self._delay <= 0:
+        if self._delay_seconds <= 0:
             return
         now = time.monotonic()
-        if now < self._next_slot:
-            time.sleep(self._next_slot - now)
-        self._next_slot = time.monotonic() + self._delay
+        if now < self._next_request_at:
+            time.sleep(self._next_request_at - now)
+        self._next_request_at = time.monotonic() + self._delay_seconds
 
 
 def _build_url(

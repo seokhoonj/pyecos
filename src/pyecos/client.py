@@ -50,7 +50,9 @@ class ECOS:
     a repeated query returns the stored rows for that many seconds without a network
     call -- the staleness a caller accepts is exactly the bound they set.
 
-    Every service method raises from the :class:`ECOSError` family:
+    Construction raises :class:`ECOSConfigError` if no API key can be resolved, and
+    ``ValueError`` for an unknown ``lang`` or a non-positive ``cache_ttl``. Every
+    service method then raises from the :class:`ECOSError` family:
     :class:`ECOSAuthError` if the key is rejected, :class:`ECOSRateLimitError` if
     ECOS is rate-limiting the key, :class:`ECOSResponseError` on any other vendor
     error, and :class:`ECOSNetworkError` if the request never completes (a transient
@@ -68,11 +70,13 @@ class ECOS:
         cache_ttl: float | None = None,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
+        if cache_ttl is not None and cache_ttl <= 0:
+            raise ValueError(f"cache_ttl must be positive seconds, got {cache_ttl}")
         self._api_key = resolve_api_key(api_key)
         self._lang = Language(lang)
         self._client = httpx.Client(timeout=timeout, transport=transport)
-        self._http = _Transport(self._client, delay_seconds=delay_seconds)
-        self._cache = _Cache(ttl=cache_ttl) if cache_ttl else None
+        self._transport = _Transport(self._client, delay_seconds=delay_seconds)
+        self._cache = _Cache(ttl=cache_ttl) if cache_ttl is not None else None
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -206,7 +210,7 @@ class ECOS:
             if cached is not None:
                 return cached
         rows = _parse.collect(
-            self._http,
+            self._transport,
             service=service,
             api_key=self._api_key,
             lang=resolved_lang,

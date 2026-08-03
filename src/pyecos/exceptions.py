@@ -52,7 +52,9 @@ class ECOSRateLimitError(ECOSResponseError):
 
 
 class ECOSNetworkError(ECOSError):
-    """The request never completed -- timeout, DNS failure, or connection reset.
+    """The request failed at the transport or HTTP layer.
 
-    The underlying transport exception is chained as ``__cause__``.
+    A timeout, DNS failure, connection reset, or a non-success HTTP status that ECOS
+    never turned into a RESULT body. The underlying exception is chained as
+    ``__cause__``.
     """

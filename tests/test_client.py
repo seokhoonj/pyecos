@@ -182,17 +182,32 @@ def test_rate_limit_is_not_retried():
 
 
 def test_delay_seconds_paces_requests(monkeypatch):
-    slept = []
     import pyecos._transport as transport
-    monkeypatch.setattr(transport.time, "sleep", lambda s: slept.append(s))
+    monkeypatch.setattr(transport.time, "monotonic", lambda: 1000.0)  # frozen clock
+    slept = []
+    monkeypatch.setattr(transport.time, "sleep", lambda seconds: slept.append(seconds))
     first = [{"DATA_VALUE": str(i)} for i in range(100)]
     ecos = ECOS("TESTKEY", delay_seconds=0.6,
                 transport=_handler([_search_page(first, 101),
                                     _search_page([{"DATA_VALUE": "101"}], 101)], []))
 
-    ecos.fetch_series("X")  # two pages -> the second waits for its slot
+    ecos.fetch_series("X")  # two pages -> the first is free, the second waits one slot
 
-    assert any(0.5 < s <= 0.6 for s in slept)  # ~0.6 minus the tiny elapsed time
+    assert slept == pytest.approx([0.6])  # one slot; frozen clock, so exactly delay
+
+
+def test_non_positive_delay_does_not_pace(monkeypatch):
+    import pyecos._transport as transport
+    slept = []
+    monkeypatch.setattr(transport.time, "sleep", lambda seconds: slept.append(seconds))
+    first = [{"DATA_VALUE": str(i)} for i in range(100)]
+    ecos = ECOS("TESTKEY", delay_seconds=0.0,  # the default -- no pacing
+                transport=_handler([_search_page(first, 101),
+                                    _search_page([{"DATA_VALUE": "101"}], 101)], []))
+
+    ecos.fetch_series("X")
+
+    assert slept == []
 
 
 def test_cycle_accepts_both_enum_and_string():
@@ -416,9 +431,11 @@ def test_clear_cache_forces_a_refetch():
 def test_cached_rows_are_isolated_from_caller_mutation():
     ecos, calls = _counting_client(cache_ttl=3600)
     first = ecos.fetch_series("X")
-    first.append({"tampered": "row"})  # mutating the returned list
-    second = ecos.fetch_series("X")  # served from the cache
-    assert len(second) == 1  # is not reflected in the cached entry
+    first.append({"tampered": "row"})  # list-level mutation
+    first[0]["data_value"] = 999.0     # dict-level mutation of a row
+    second = ecos.fetch_series("X")    # served from the cache
+    assert len(second) == 1            # the list is isolated
+    assert second[0]["data_value"] == 1.0  # and each row dict is isolated too
 
 
 def test_cache_evicts_least_recently_used_past_maxsize():
@@ -430,3 +447,45 @@ def test_cache_evicts_least_recently_used_past_maxsize():
     cache.set(("s", "kr", ("c",)), [{"v": "3"}])  # over maxsize -> evict "b"
     assert cache.get(("s", "kr", ("b",))) is None
     assert cache.get(("s", "kr", ("a",))) is not None
+
+
+def test_cache_stores_the_whole_paginated_result_and_a_hit_skips_all_pages():
+    first = [{"DATA_VALUE": str(i)} for i in range(100)]
+    calls: list[int] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        page = _search_page(first, 101) if len(calls) == 1 \
+            else _search_page([{"DATA_VALUE": "100"}], 101)
+        return httpx.Response(200, json=page)
+
+    ecos = ECOS("TESTKEY", cache_ttl=3600, transport=httpx.MockTransport(handle))
+    a = ecos.fetch_series("X")
+    b = ecos.fetch_series("X")  # repeat -> whole 101-row result from one cache entry
+
+    assert len(a) == len(b) == 101
+    assert len(calls) == 2  # two pages once; the repeat made no request
+
+
+def test_transient_failure_is_retried_and_the_later_success_is_returned(monkeypatch):
+    import pyecos._transport as transport
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)  # no real waiting
+    attempts: list[int] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise httpx.ConnectTimeout("blip", request=request)
+        return httpx.Response(200, json=_search_page([{"DATA_VALUE": "1"}], 1))
+
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
+
+    (row,) = ecos.fetch_series("X")
+    assert row["data_value"] == 1.0
+    assert len(attempts) == 2  # failed once, then the retry succeeded
+
+
+def test_non_positive_cache_ttl_is_rejected():
+    for bad in (0, -1):
+        with pytest.raises(ValueError):
+            ECOS("TESTKEY", cache_ttl=bad, transport=httpx.MockTransport(lambda r: r))

@@ -11,6 +11,10 @@ caller accepts is exactly the bound they chose -- a series whose latest observat
 since updated is re-fetched once its entry expires. Least-recently-used entries are
 evicted past ``maxsize`` so the store cannot grow without bound.
 
+Each entry is copied on store and on retrieval, row by row, so a caller mutating a
+returned row cannot corrupt the stored entry or another caller's copy; the rows carry
+only scalar values, so a per-row ``dict`` copy fully isolates them.
+
 Not thread-safe: the entries are mutable instance state with no lock, like the client
 that owns it -- use one client per thread.
 """
@@ -23,11 +27,16 @@ from typing import Any
 
 # (service, resolved language, request tail) -- the logical query, minus the paging
 # window and the API key, so kr and en cache apart and two clients never collide.
-Key = tuple[str, str, tuple[str, ...]]
+_CacheKey = tuple[str, str, tuple[str, ...]]
 
-Rows = list[dict[str, Any]]
+_Rows = list[dict[str, Any]]
 
 _DEFAULT_MAXSIZE = 256
+
+
+def _isolated(rows: _Rows) -> _Rows:
+    """A copy of ``rows`` sharing none of its dicts (values are scalars)."""
+    return [dict(row) for row in rows]
 
 
 class _Cache:
@@ -36,13 +45,13 @@ class _Cache:
     def __init__(self, *, ttl: float, maxsize: int = _DEFAULT_MAXSIZE) -> None:
         self._ttl = ttl
         self._maxsize = maxsize
-        self._entries: OrderedDict[Key, tuple[float, Rows]] = OrderedDict()
+        self._entries: OrderedDict[_CacheKey, tuple[float, _Rows]] = OrderedDict()
 
-    def get(self, key: Key) -> Rows | None:
+    def get(self, key: _CacheKey) -> _Rows | None:
         """The cached rows for ``key`` if present and unexpired, else ``None``.
 
-        Returns a shallow copy so a caller mutating the list cannot corrupt the
-        entry; the row dicts are shared, so treat them as read-only.
+        Returns an isolated copy, so a caller mutating the rows cannot corrupt the
+        entry.
         """
         entry = self._entries.get(key)
         if entry is None:
@@ -52,11 +61,11 @@ class _Cache:
             del self._entries[key]
             return None
         self._entries.move_to_end(key)  # mark most-recently-used
-        return list(rows)
+        return _isolated(rows)
 
-    def set(self, key: Key, rows: Rows) -> None:
-        """Store a shallow copy of ``rows`` under ``key``, evicting LRU past maxsize."""
-        self._entries[key] = (time.monotonic() + self._ttl, list(rows))
+    def set(self, key: _CacheKey, rows: _Rows) -> None:
+        """Store an isolated copy of ``rows``, evicting the LRU entry past maxsize."""
+        self._entries[key] = (time.monotonic() + self._ttl, _isolated(rows))
         self._entries.move_to_end(key)
         while len(self._entries) > self._maxsize:
             self._entries.popitem(last=False)  # drop the least-recently-used
