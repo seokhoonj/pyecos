@@ -1,0 +1,11 @@
+{
+  "name": "pyecos",
+  "displayName": "pyecos",
+  "description": "Read Bank of Korea ECOS economic statistics from the command line, powered by the pyecos CLI",
+  "version": "0.1.0",
+  "author": { "name": "seokhoonj" },
+  "homepage": "https://github.com/seokhoonj/pyecos",
+  "repository": "https://github.com/seokhoonj/pyecos",
+  "license": "MIT",
+  "keywords": ["ecos", "bank of korea", "korea", "economic statistics", "interest rate"]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "pyecos",
+  "version": "0.1.0",
+  "description": "Read Bank of Korea ECOS economic statistics from the command line, powered by the pyecos CLI",
+  "author": { "name": "seokhoonj", "url": "https://github.com/seokhoonj" },
+  "homepage": "https://github.com/seokhoonj/pyecos",
+  "repository": "https://github.com/seokhoonj/pyecos",
+  "license": "MIT",
+  "keywords": ["ecos", "bank of korea", "korea", "economic statistics", "interest rate"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "pyecos",
+    "shortDescription": "Read Bank of Korea ECOS economic statistics",
+    "longDescription": "Fetch a statistic's time series, browse the statistical-table catalog to find its codes, or read the top-100 headline indicators from the Bank of Korea ECOS Open API via the pyecos CLI. Needs a free ECOS API key in ECOS_API_KEY.",
+    "developerName": "seokhoonj",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": ["Get the Bank of Korea base rate as a monthly series", "Find the ECOS table code for the consumer price index", "Show the top-100 ECOS indicators"]
+  }
+}
