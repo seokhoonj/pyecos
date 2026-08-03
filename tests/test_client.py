@@ -11,6 +11,7 @@ from pyecos import (
     ECOSAuthError,
     ECOSConfigError,
     ECOSNetworkError,
+    ECOSRateLimitError,
     ECOSResponseError,
 )
 
@@ -48,7 +49,7 @@ def test_api_key_read_from_environment(monkeypatch):
     assert ecos._api_key == "FROMENV"
 
 
-def test_get_series_maps_vendor_keys_and_parses_value():
+def test_fetch_series_maps_vendor_keys_and_parses_value():
     raw = {
         "STAT_CODE": "722Y001",
         "STAT_NAME": "1.3.1. 시장금리",
@@ -61,7 +62,7 @@ def test_get_series_maps_vendor_keys_and_parses_value():
     }
     ecos = _client([_search_page([raw], 1)])
 
-    rows = ecos.get_series("722Y001", start="202401", end="202401")
+    rows = ecos.fetch_series("722Y001", start="202401", end="202401")
 
     assert rows == [{
         "stat_code": "722Y001",
@@ -79,19 +80,19 @@ def test_blank_data_value_becomes_none():
     raw = {"STAT_CODE": "X", "TIME": "202401", "DATA_VALUE": ""}
     ecos = _client([_search_page([raw], 1)])
 
-    (row,) = ecos.get_series("X", start="202401", end="202401")
+    (row,) = ecos.fetch_series("X", start="202401", end="202401")
 
     assert row["data_value"] is None
 
 
-def test_get_series_pages_past_the_hundred_row_limit():
+def test_fetch_series_pages_past_the_hundred_row_limit():
     first = [{"STAT_CODE": "X", "TIME": f"2024{i:02d}", "DATA_VALUE": str(i)}
              for i in range(1, 101)]
     second = [{"STAT_CODE": "X", "TIME": "202512", "DATA_VALUE": "101"}]
     paths: list[str] = []
     ecos = _client([_search_page(first, 101), _search_page(second, 101)], paths)
 
-    rows = ecos.get_series("X", cycle=Cycle.MONTHLY, start="202401", end="202512")
+    rows = ecos.fetch_series("X", cycle=Cycle.MONTHLY, start="202401", end="202512")
 
     assert len(rows) == 101
     assert rows[-1]["data_value"] == 101.0
@@ -99,11 +100,11 @@ def test_get_series_pages_past_the_hundred_row_limit():
     assert "/101/200/" in paths[1]
 
 
-def test_get_series_builds_the_positional_path_in_order():
+def test_fetch_series_builds_the_positional_path_in_order():
     paths: list[str] = []
     ecos = _client([_search_page([], 0)], paths)
 
-    ecos.get_series("722Y001", cycle="M", start="202001", end="202412",
+    ecos.fetch_series("722Y001", cycle="M", start="202001", end="202412",
                     item_code1="0101000")
 
     # service/key/format/lang/start_row/end_row/stat/cycle/start/end/item1
@@ -117,7 +118,7 @@ def test_no_matching_data_returns_empty_list():
     page = {"RESULT": {"CODE": "INFO-200", "MESSAGE": "no data"}}
     ecos = _client([page])
 
-    assert ecos.get_series("X", start="202401", end="202401") == []
+    assert ecos.fetch_series("X", start="202401", end="202401") == []
 
 
 def test_invalid_key_raises_auth_error():
@@ -125,7 +126,7 @@ def test_invalid_key_raises_auth_error():
     ecos = _client([page])
 
     with pytest.raises(ECOSAuthError):
-        ecos.get_series("X", start="202401", end="202401")
+        ecos.fetch_series("X", start="202401", end="202401")
 
 
 def test_vendor_error_raises_response_error_with_code():
@@ -133,26 +134,72 @@ def test_vendor_error_raises_response_error_with_code():
     ecos = _client([page])
 
     with pytest.raises(ECOSResponseError) as caught:
-        ecos.get_series("X")
+        ecos.fetch_series("X")
 
     assert caught.value.code == "ERROR-300"
 
 
-def test_transport_failure_raises_network_error():
+def test_transport_failure_raises_network_error(monkeypatch):
+    import pyecos._transport as transport
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)  # no real waiting
+    attempts = []
+
     def fail(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
         raise httpx.ConnectTimeout("timed out", request=request)
 
     ecos = ECOS("TESTKEY", transport=httpx.MockTransport(fail))
 
     with pytest.raises(ECOSNetworkError):
-        ecos.get_series("X", start="202401", end="202401")
+        ecos.fetch_series("X", start="202401", end="202401")
+    assert len(attempts) == 3  # a transient failure is retried up to the limit
+
+
+def test_rate_limit_raises_rate_limit_error():
+    page = {"RESULT": {"CODE": "ERROR-602", "MESSAGE": "too many calls"}}
+    ecos = _client([page])
+
+    with pytest.raises(ECOSRateLimitError) as caught:
+        ecos.fetch_series("X")
+
+    assert isinstance(caught.value, ECOSResponseError)  # a subclass, still catchable
+    assert caught.value.code == "ERROR-602"
+
+
+def test_rate_limit_is_not_retried():
+    attempts = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        return httpx.Response(200, json={"RESULT": {"CODE": "ERROR-602",
+                                                    "MESSAGE": "x"}})
+
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
+
+    with pytest.raises(ECOSRateLimitError):
+        ecos.fetch_series("X")
+    assert len(attempts) == 1  # a rate limit is an answer -- raised, not retried
+
+
+def test_delay_seconds_paces_requests(monkeypatch):
+    slept = []
+    import pyecos._transport as transport
+    monkeypatch.setattr(transport.time, "sleep", lambda s: slept.append(s))
+    first = [{"DATA_VALUE": str(i)} for i in range(100)]
+    ecos = ECOS("TESTKEY", delay_seconds=0.6,
+                transport=_handler([_search_page(first, 101),
+                                    _search_page([{"DATA_VALUE": "101"}], 101)], []))
+
+    ecos.fetch_series("X")  # two pages -> the second waits for its slot
+
+    assert any(0.5 < s <= 0.6 for s in slept)  # ~0.6 minus the tiny elapsed time
 
 
 def test_cycle_accepts_both_enum_and_string():
     paths_enum: list[str] = []
     paths_str: list[str] = []
-    _client([_search_page([], 0)], paths_enum).get_series("X", cycle=Cycle.DAILY)
-    _client([_search_page([], 0)], paths_str).get_series("X", cycle="D")
+    _client([_search_page([], 0)], paths_enum).fetch_series("X", cycle=Cycle.DAILY)
+    _client([_search_page([], 0)], paths_str).fetch_series("X", cycle="D")
 
     assert "/X/D" in paths_enum[0]
     assert paths_enum[0] == paths_str[0]
@@ -164,7 +211,7 @@ def test_per_call_language_overrides_the_client_default():
     ecos = ECOS("TESTKEY", lang="kr",
                 transport=_handler([empty_key_stats], paths))
 
-    ecos.get_key_statistics(lang="en")
+    ecos.fetch_key_statistics(lang="en")
 
     assert "/json/en/" in paths[0]
 
@@ -178,7 +225,7 @@ def test_korean_argument_is_url_encoded():
     paths: list[str] = []
     ecos = _client([{"StatisticWord": {"list_total_count": "0", "row": []}}], paths)
 
-    ecos.get_glossary("총부채원리금상환비율")
+    ecos.fetch_glossary("총부채원리금상환비율")
 
     # The Korean term is percent-encoded, not passed raw into the path.
     assert "총부채" not in paths[0]
@@ -200,12 +247,12 @@ def _service_page(service: str, rows: list[dict], total: int | None = None) -> d
 
 
 @pytest.mark.parametrize("call, service, tail_segment", [
-    (lambda e: e.get_tables(), "StatisticTableList", "/1/100"),
-    (lambda e: e.get_tables(stat_code="722Y001"), "StatisticTableList", "/722Y001"),
-    (lambda e: e.get_items("722Y001"), "StatisticItemList", "/722Y001"),
-    (lambda e: e.get_key_statistics(), "KeyStatisticList", "/1/100"),
-    (lambda e: e.get_glossary("DSR"), "StatisticWord", "/DSR"),
-    (lambda e: e.get_meta("ESI"), "StatisticMeta", "/ESI"),
+    (lambda e: e.fetch_tables(), "StatisticTableList", "/1/100"),
+    (lambda e: e.fetch_tables(stat_code="722Y001"), "StatisticTableList", "/722Y001"),
+    (lambda e: e.fetch_items("722Y001"), "StatisticItemList", "/722Y001"),
+    (lambda e: e.fetch_key_statistics(), "KeyStatisticList", "/1/100"),
+    (lambda e: e.fetch_glossary("DSR"), "StatisticWord", "/DSR"),
+    (lambda e: e.fetch_meta("ESI"), "StatisticMeta", "/ESI"),
 ])
 def test_each_service_targets_its_own_endpoint(call, service, tail_segment):
     paths: list[str] = []
@@ -217,7 +264,7 @@ def test_each_service_targets_its_own_endpoint(call, service, tail_segment):
 def test_tables_maps_parent_and_searchable_aliases():
     raw = {"STAT_CODE": "102Y004", "P_STAT_CODE": "0000000620",
            "SRCH_YN": "Y", "STAT_NAME": "본원통화"}
-    (row,) = _client([_service_page("StatisticTableList", [raw])]).get_tables()
+    (row,) = _client([_service_page("StatisticTableList", [raw])]).fetch_tables()
     assert row["parent_stat_code"] == "0000000620"
     assert row["searchable"] == "Y"
 
@@ -225,7 +272,7 @@ def test_tables_maps_parent_and_searchable_aliases():
 def test_items_maps_weight_wgt_variant_and_data_count():
     # StatisticItemList sends the weight as WEIGHT (full word), not WGT.
     raw = {"ITEM_CODE": "0", "P_ITEM_CODE": "ROOT", "WEIGHT": "1000", "DATA_CNT": "5"}
-    (row,) = _client([_service_page("StatisticItemList", [raw])]).get_items("X")
+    (row,) = _client([_service_page("StatisticItemList", [raw])]).fetch_items("X")
     assert row["parent_item_code"] == "ROOT"
     assert row["weight"] == "1000"
     assert row["data_count"] == "5"
@@ -233,24 +280,24 @@ def test_items_maps_weight_wgt_variant_and_data_count():
 
 def test_key_statistics_parses_data_value_to_float():
     raw = {"KEYSTAT_NAME": "한국은행 기준금리", "DATA_VALUE": "2.75", "UNIT_NAME": "%"}
-    (row,) = _client([_service_page("KeyStatisticList", [raw])]).get_key_statistics()
+    (row,) = _client([_service_page("KeyStatisticList", [raw])]).fetch_key_statistics()
     assert row["keystat_name"] == "한국은행 기준금리"
     assert row["data_value"] == 2.75
 
 
 def test_meta_maps_content_hierarchy_aliases():
     raw = {"LVL": "1", "P_CONT_CODE": "R", "CONT_CODE": "A", "CONT_NAME": "명목"}
-    (row,) = _client([_service_page("StatisticMeta", [raw])]).get_meta("ESI")
+    (row,) = _client([_service_page("StatisticMeta", [raw])]).fetch_meta("ESI")
     assert row == {"level": "1", "parent_content_code": "R",
                    "content_code": "A", "content_name": "명목"}
 
 
 @pytest.mark.parametrize("call, service", [
-    (lambda e: e.get_tables(lang="en"), "StatisticTableList"),
-    (lambda e: e.get_items("X", lang="en"), "StatisticItemList"),
-    (lambda e: e.get_key_statistics(lang="en"), "KeyStatisticList"),
-    (lambda e: e.get_glossary("X", lang="en"), "StatisticWord"),
-    (lambda e: e.get_meta("X", lang="en"), "StatisticMeta"),
+    (lambda e: e.fetch_tables(lang="en"), "StatisticTableList"),
+    (lambda e: e.fetch_items("X", lang="en"), "StatisticItemList"),
+    (lambda e: e.fetch_key_statistics(lang="en"), "KeyStatisticList"),
+    (lambda e: e.fetch_glossary("X", lang="en"), "StatisticWord"),
+    (lambda e: e.fetch_meta("X", lang="en"), "StatisticMeta"),
 ])
 def test_per_call_language_override_reaches_every_service(call, service):
     paths: list[str] = []
@@ -268,7 +315,7 @@ def test_pagination_stops_after_two_full_pages_equal_to_total():
     paths: list[str] = []
     ecos = _client([_search_page(first, 200), _search_page(second, 200)], paths)
 
-    rows = ecos.get_series("X")
+    rows = ecos.fetch_series("X")
 
     assert len(rows) == 200
     assert len(paths) == 2  # no wasted third request when the count is exhausted
@@ -277,14 +324,14 @@ def test_pagination_stops_after_two_full_pages_equal_to_total():
 def test_unexpected_envelope_raises_response_error():
     ecos = _client([{"somethingElse": {"row": []}}])
     with pytest.raises(ECOSResponseError) as caught:
-        ecos.get_series("X")
+        ecos.fetch_series("X")
     assert caught.value.code == "UNKNOWN"
 
 
 def test_non_dict_json_body_raises_response_error():
     ecos = _client([["not", "an", "object"]])
     with pytest.raises(ECOSResponseError):
-        ecos.get_series("X")
+        ecos.fetch_series("X")
 
 
 def test_non_json_200_body_raises_response_error():
@@ -293,12 +340,93 @@ def test_non_json_200_body_raises_response_error():
 
     ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
     with pytest.raises(ECOSResponseError) as caught:
-        ecos.get_series("X")
+        ecos.fetch_series("X")
     assert caught.value.code == "UNKNOWN"
 
 
 def test_garbage_total_count_does_not_loop_forever():
     page = {"StatisticSearch": {"list_total_count": "N/A",
                                 "row": [{"DATA_VALUE": "1"}]}}
-    (row,) = _client([page]).get_series("X")  # terminates on the empty next batch
+    (row,) = _client([page]).fetch_series("X")  # terminates on the empty next batch
     assert row["data_value"] == 1.0
+
+
+# --- opt-in TTL cache -------------------------------------------------------
+
+def _counting_client(*, cache_ttl: float | None = None) -> tuple[ECOS, list[int]]:
+    """An ECOS whose mock transport counts requests and always answers one row."""
+    calls: list[int] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        calls.append(1)
+        return httpx.Response(200, json=_search_page([{"DATA_VALUE": "1"}], 1))
+
+    ecos = ECOS("TESTKEY", cache_ttl=cache_ttl, transport=httpx.MockTransport(handle))
+    return ecos, calls
+
+
+def test_cache_serves_a_repeat_query_without_a_network_call():
+    ecos, calls = _counting_client(cache_ttl=3600)
+    first = ecos.fetch_series("X", start="202401", end="202401")
+    second = ecos.fetch_series("X", start="202401", end="202401")
+    assert first == second
+    assert len(calls) == 1  # the second is served from the cache
+
+
+def test_cache_is_off_by_default_and_refetches():
+    ecos, calls = _counting_client()
+    ecos.fetch_series("X")
+    ecos.fetch_series("X")
+    assert len(calls) == 2
+
+
+def test_cache_keys_on_the_request_so_different_queries_miss():
+    ecos, calls = _counting_client(cache_ttl=3600)
+    ecos.fetch_series("X")
+    ecos.fetch_series("Y")  # a different stat code is a different key
+    assert len(calls) == 2
+
+
+def test_cache_keeps_language_variants_apart():
+    ecos, calls = _counting_client(cache_ttl=3600)
+    ecos.fetch_series("X", lang="kr")
+    ecos.fetch_series("X", lang="en")
+    assert len(calls) == 2
+
+
+def test_cache_entry_expires_after_ttl(monkeypatch):
+    import pyecos._cache as cache_mod
+    clock = [1000.0]
+    monkeypatch.setattr(cache_mod.time, "monotonic", lambda: clock[0])
+    ecos, calls = _counting_client(cache_ttl=60)
+    ecos.fetch_series("X")
+    clock[0] += 61  # past the TTL
+    ecos.fetch_series("X")
+    assert len(calls) == 2
+
+
+def test_clear_cache_forces_a_refetch():
+    ecos, calls = _counting_client(cache_ttl=3600)
+    ecos.fetch_series("X")
+    ecos.clear_cache()
+    ecos.fetch_series("X")
+    assert len(calls) == 2
+
+
+def test_cached_rows_are_isolated_from_caller_mutation():
+    ecos, calls = _counting_client(cache_ttl=3600)
+    first = ecos.fetch_series("X")
+    first.append({"tampered": "row"})  # mutating the returned list
+    second = ecos.fetch_series("X")  # served from the cache
+    assert len(second) == 1  # is not reflected in the cached entry
+
+
+def test_cache_evicts_least_recently_used_past_maxsize():
+    from pyecos._cache import _Cache
+    cache = _Cache(ttl=3600, maxsize=2)
+    cache.set(("s", "kr", ("a",)), [{"v": "1"}])
+    cache.set(("s", "kr", ("b",)), [{"v": "2"}])
+    assert cache.get(("s", "kr", ("a",))) is not None  # touches "a" -> "b" is LRU
+    cache.set(("s", "kr", ("c",)), [{"v": "3"}])  # over maxsize -> evict "b"
+    assert cache.get(("s", "kr", ("b",))) is None
+    assert cache.get(("s", "kr", ("a",))) is not None

@@ -10,6 +10,7 @@ from .exceptions import (
     ECOSConfigError,
     ECOSError,
     ECOSNetworkError,
+    ECOSRateLimitError,
     ECOSResponseError,
 )
 from .types import (
@@ -42,6 +43,7 @@ __all__ = [
     "ECOSConfigError",
     "ECOSAuthError",
     "ECOSResponseError",
+    "ECOSRateLimitError",
     "ECOSNetworkError",
     "__version__",
 ]

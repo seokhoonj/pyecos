@@ -39,7 +39,7 @@ from pyecos import ECOS, Cycle
 
 with ECOS() as ecos:
     # 통계 시계열 조회 (StatisticSearch).
-    rows = ecos.get_series(
+    rows = ecos.fetch_series(
         "722Y001",              # 시장금리
         item_code1="0101000",   # 한국은행 기준금리
         cycle=Cycle.MONTHLY,
@@ -48,14 +48,14 @@ with ECOS() as ecos:
     )
 
     # 통계표 카탈로그 탐색.
-    tables = ecos.get_tables()             # 최상위 통계표
-    children = ecos.get_tables(stat_code="722Y001")
-    items = ecos.get_items("722Y001")      # 통계표의 세부 항목
+    tables = ecos.fetch_tables()             # 최상위 통계표
+    children = ecos.fetch_tables(stat_code="722Y001")
+    items = ecos.fetch_items("722Y001")      # 통계표의 세부 항목
 
     # 100대 지표, 용어사전, 메타DB.
-    key = ecos.get_key_statistics()        # 100대 통계지표
-    word = ecos.get_glossary("DSR")
-    meta = ecos.get_meta("경제심리지수")
+    key = ecos.fetch_key_statistics()        # 100대 통계지표
+    word = ecos.fetch_glossary("DSR")
+    meta = ecos.fetch_meta("경제심리지수")
 ```
 
 모든 메서드는 평범한 `dict` 행의 `list`를 반환하므로, pandas는 한 줄이면 됩니다
@@ -67,7 +67,7 @@ import pandas as pd
 frame = pd.DataFrame(rows)
 ```
 
-`get_series`는 각 관측치의 `data_value`를 `float`로 반환하고(한국은행이 값을 비워 보낸
+`fetch_series`는 각 관측치의 `data_value`를 `float`로 반환하고(한국은행이 값을 비워 보낸
 경우 `None`), 요청당 100건 제한을 알아서 넘겨 페이지네이션하므로 여러 해치 일별 시계열도
 한 번의 호출로 돌아옵니다.
 
@@ -96,7 +96,7 @@ pyecos meta 경제심리지수
 
 ## 주기(cycle)
 
-`get_series`는 `Cycle`(또는 그 코드 문자열)을 받습니다. 각 행의 `time` 필드는 주기에 맞춰
+`fetch_series`는 `Cycle`(또는 그 코드 문자열)을 받습니다. 각 행의 `time` 필드는 주기에 맞춰
 형식이 정해집니다.
 
 | 주기 | 코드 | `time` 예시 |
@@ -116,11 +116,15 @@ pyecos meta 경제심리지수
 |---|---|
 | `ECOSConfigError` | API 키가 없을 때 |
 | `ECOSAuthError` | ECOS가 키를 거부했을 때 |
+| `ECOSRateLimitError` | ECOS가 호출을 제한할 때 (ERROR-602 · `ECOSResponseError`의 하위) |
 | `ECOSResponseError` | ECOS가 에러 코드를 반환했을 때 (`.code` / `.message` 보유) |
-| `ECOSNetworkError` | 요청이 끝내 완료되지 못했을 때 |
+| `ECOSNetworkError` | 요청이 끝내 완료되지 못했을 때 (일시적 타임아웃·5xx는 백오프 재시도 후) |
 
 조회 결과가 단순히 없는 경우는 에러가 아니라 빈 리스트로 돌아옵니다. 잘못된 `cycle`·`lang`
 인자는 표준 `ValueError`를 냅니다.
+
+대량으로 조회할 때는 `ECOS(delay_seconds=0.6)`처럼 요청 간격을 두면 ECOS 레이트리밋(약 3분에
+300회)을 넘지 않습니다.
 
 ## 라이선스
 

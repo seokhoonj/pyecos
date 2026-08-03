@@ -33,8 +33,8 @@ def _stub_client(monkeypatch: pytest.MonkeyPatch, *,
                 raise error
             return rows or []
 
-        get_series = get_tables = get_items = _answer
-        get_key_statistics = get_glossary = get_meta = _answer
+        fetch_series = fetch_tables = fetch_items = _answer
+        fetch_key_statistics = fetch_glossary = fetch_meta = _answer
 
     monkeypatch.setattr(cli, "ECOS", _FakeECOS)
     return seen
@@ -144,34 +144,34 @@ def _recording_client(monkeypatch: pytest.MonkeyPatch,
         def __exit__(self, *exc: object) -> bool:
             return False
 
-        get_series = _record("get_series")
-        get_tables = _record("get_tables")
-        get_items = _record("get_items")
-        get_key_statistics = _record("get_key_statistics")
-        get_glossary = _record("get_glossary")
-        get_meta = _record("get_meta")
+        fetch_series = _record("fetch_series")
+        fetch_tables = _record("fetch_tables")
+        fetch_items = _record("fetch_items")
+        fetch_key_statistics = _record("fetch_key_statistics")
+        fetch_glossary = _record("fetch_glossary")
+        fetch_meta = _record("fetch_meta")
 
     monkeypatch.setattr(cli, "ECOS", _FakeECOS)
     return calls
 
 
-def test_items_dispatches_to_get_items(monkeypatch):
+def test_items_dispatches_to_fetch_items(monkeypatch):
     calls = _recording_client(monkeypatch, rows=[])
     cli.main(["items", "722Y001"])
-    assert calls == [("get_items", ("722Y001",), {})]
+    assert calls == [("fetch_items", ("722Y001",), {})]
 
 
-def test_key_stats_dispatches_to_get_key_statistics(monkeypatch):
+def test_key_stats_dispatches_to_fetch_key_statistics(monkeypatch):
     calls = _recording_client(monkeypatch, rows=[])
     cli.main(["key-stats"])
-    assert calls[0][0] == "get_key_statistics"
+    assert calls[0][0] == "fetch_key_statistics"
 
 
 def test_glossary_dispatches_with_word_and_renders_content(monkeypatch, capsys):
     calls = _recording_client(monkeypatch,
                               rows=[{"word": "DSR", "content": "총부채원리금상환비율"}])
     cli.main(["glossary", "DSR"])
-    assert calls == [("get_glossary", ("DSR",), {})]
+    assert calls == [("fetch_glossary", ("DSR",), {})]
     out = capsys.readouterr().out
     assert "DSR" in out and "총부채원리금상환비율" in out
 
@@ -179,14 +179,14 @@ def test_glossary_dispatches_with_word_and_renders_content(monkeypatch, capsys):
 def test_meta_dispatches_with_dataset_name(monkeypatch):
     calls = _recording_client(monkeypatch, rows=[])
     cli.main(["meta", "경제심리지수"])
-    assert calls == [("get_meta", ("경제심리지수",), {})]
+    assert calls == [("fetch_meta", ("경제심리지수",), {})]
 
 
 def test_series_dispatch_expands_items_and_maps_cycle(monkeypatch):
     calls = _recording_client(monkeypatch, rows=[])
     cli.main(["series", "X", "--item", "A", "--item", "B", "--cycle", "daily"])
     name, args, kwargs = calls[0]
-    assert name == "get_series"
+    assert name == "fetch_series"
     assert args == ("X",)
     assert kwargs["item_code1"] == "A" and kwargs["item_code2"] == "B"
     assert kwargs["item_code3"] is None

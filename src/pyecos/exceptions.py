@@ -41,6 +41,16 @@ class ECOSResponseError(ECOSError):
         super().__init__(f"[{code}] {message}")
 
 
+class ECOSRateLimitError(ECOSResponseError):
+    """ECOS is rate-limiting the caller (vendor code ERROR-602).
+
+    ECOS restricts a key that exceeds roughly 300 calls in three minutes and then
+    locks it out for about thirty minutes. It subclasses :class:`ECOSResponseError`,
+    so ``except ECOSResponseError`` still catches it, but a caller can catch this
+    distinctly to back off instead of treating it as a generic error.
+    """
+
+
 class ECOSNetworkError(ECOSError):
     """The request never completed -- timeout, DNS failure, or connection reset.
 

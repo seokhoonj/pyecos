@@ -120,7 +120,7 @@ def _run_series(args: argparse.Namespace) -> int:
         return 1
     items = (args.item + [None, None, None, None])[:4]
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_series(
+        rows = ecos.fetch_series(
             args.stat_code, cycle=Cycle[args.cycle.upper()],
             start=args.start, end=args.end,
             item_code1=items[0], item_code2=items[1],
@@ -131,7 +131,7 @@ def _run_series(args: argparse.Namespace) -> int:
 
 def _run_tables(args: argparse.Namespace) -> int:
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_tables(stat_code=args.stat_code)
+        rows = ecos.fetch_tables(stat_code=args.stat_code)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("code", "stat_code"), ("cycle", "cycle"),
                ("srch", "searchable"), ("name", "stat_name")]))
@@ -140,7 +140,7 @@ def _run_tables(args: argparse.Namespace) -> int:
 
 def _run_items(args: argparse.Namespace) -> int:
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_items(args.stat_code)
+        rows = ecos.fetch_items(args.stat_code)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("item", "item_code"), ("cycle", "cycle"), ("from", "start_time"),
                ("to", "end_time"), ("unit", "unit_name"), ("name", "item_name")]))
@@ -149,7 +149,7 @@ def _run_items(args: argparse.Namespace) -> int:
 
 def _run_key_stats(args: argparse.Namespace) -> int:
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_key_statistics()
+        rows = ecos.fetch_key_statistics()
     print(_to_json(rows) if args.json else _render_table(
         rows, [("class", "class_name"), ("name", "keystat_name"),
                ("value", "data_value"), ("unit", "unit_name")]))
@@ -158,14 +158,14 @@ def _run_key_stats(args: argparse.Namespace) -> int:
 
 def _run_glossary(args: argparse.Namespace) -> int:
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_glossary(args.word)
+        rows = ecos.fetch_glossary(args.word)
     print(_to_json(rows) if args.json else _render_glossary(rows))
     return 0
 
 
 def _run_meta(args: argparse.Namespace) -> int:
     with ECOS(lang=args.lang or "kr") as ecos:
-        rows = ecos.get_meta(args.dataset_name)
+        rows = ecos.fetch_meta(args.dataset_name)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("lvl", "level"), ("code", "content_code"), ("name", "content_name")]))
     return 0

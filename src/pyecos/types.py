@@ -43,7 +43,7 @@ class Language(StrEnum):
 
 
 class StatRow(TypedDict, total=False):
-    """One observation from :meth:`ECOS.get_series` (service StatisticSearch)."""
+    """One observation from :meth:`ECOS.fetch_series` (service StatisticSearch)."""
 
     stat_code: str
     stat_name: str
@@ -62,7 +62,7 @@ class StatRow(TypedDict, total=False):
 
 
 class TableRow(TypedDict, total=False):
-    """One statistical table from :meth:`ECOS.get_tables` (StatisticTableList)."""
+    """One statistical table from :meth:`ECOS.fetch_tables` (StatisticTableList)."""
 
     stat_code: str
     stat_name: str
@@ -75,7 +75,7 @@ class TableRow(TypedDict, total=False):
 
 
 class ItemRow(TypedDict, total=False):
-    """One detail item from :meth:`ECOS.get_items` (StatisticItemList)."""
+    """One detail item from :meth:`ECOS.fetch_items` (StatisticItemList)."""
 
     stat_code: str
     stat_name: str
@@ -94,7 +94,7 @@ class ItemRow(TypedDict, total=False):
 
 
 class KeyStatRow(TypedDict, total=False):
-    """One of the top-100 indicators from :meth:`ECOS.get_key_statistics`."""
+    """One of the top-100 indicators from :meth:`ECOS.fetch_key_statistics`."""
 
     class_name: str
     keystat_name: str
@@ -104,14 +104,14 @@ class KeyStatRow(TypedDict, total=False):
 
 
 class WordRow(TypedDict, total=False):
-    """One glossary entry from :meth:`ECOS.get_glossary` (StatisticWord)."""
+    """One glossary entry from :meth:`ECOS.fetch_glossary` (StatisticWord)."""
 
     word: str
     content: str
 
 
 class MetaRow(TypedDict, total=False):
-    """One meta-DB row from :meth:`ECOS.get_meta` (StatisticMeta)."""
+    """One meta-DB row from :meth:`ECOS.fetch_meta` (StatisticMeta)."""
 
     level: str             # vendor LVL
     parent_content_code: str

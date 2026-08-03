@@ -15,7 +15,9 @@ from typing import Any, cast
 import httpx
 
 from . import _parse
+from ._cache import _Cache
 from ._config import resolve_api_key
+from ._transport import _Transport
 from .types import (
     Cycle,
     ItemRow,
@@ -37,16 +39,23 @@ class ECOS:
     ``ECOS_API_KEY`` environment variable or ``~/.config/pyecos/credentials.json``::
 
         with ECOS() as ecos:
-            rows = ecos.get_series("722Y001", cycle="M",
+            rows = ecos.fetch_series("722Y001", cycle="M",
                                    start="202001", end="202412")
 
     The client owns a pooled HTTP connection, so reuse one instance across calls
-    and close it when done -- as a context manager, or via :meth:`close`.
+    and close it when done -- as a context manager, or via :meth:`close`. Set
+    ``delay_seconds`` to space out requests when fetching in bulk, so a burst stays
+    under the ECOS rate cap (~300 calls in three minutes); 0.6s keeps one client
+    under it indefinitely. ``cache_ttl`` (off by default) turns on an in-memory cache:
+    a repeated query returns the stored rows for that many seconds without a network
+    call -- the staleness a caller accepts is exactly the bound they set.
 
     Every service method raises from the :class:`ECOSError` family:
-    :class:`ECOSAuthError` if the key is rejected, :class:`ECOSResponseError` on a
-    vendor error, and :class:`ECOSNetworkError` if the request never completes. A
-    query that simply matches no data returns an empty list, not an error.
+    :class:`ECOSAuthError` if the key is rejected, :class:`ECOSRateLimitError` if
+    ECOS is rate-limiting the key, :class:`ECOSResponseError` on any other vendor
+    error, and :class:`ECOSNetworkError` if the request never completes (a transient
+    timeout or 5xx is retried with backoff first). A query that simply matches no
+    data returns an empty list, not an error.
     """
 
     def __init__(
@@ -55,17 +64,31 @@ class ECOS:
         *,
         lang: Language | str = Language.KOREAN,
         timeout: float = _DEFAULT_TIMEOUT,
+        delay_seconds: float = 0.0,
+        cache_ttl: float | None = None,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._api_key = resolve_api_key(api_key)
         self._lang = Language(lang)
         self._client = httpx.Client(timeout=timeout, transport=transport)
+        self._http = _Transport(self._client, delay_seconds=delay_seconds)
+        self._cache = _Cache(ttl=cache_ttl) if cache_ttl else None
 
     # -- lifecycle ---------------------------------------------------------
 
     def close(self) -> None:
         """Close the underlying HTTP connection pool."""
         self._client.close()
+
+    def clear_cache(self) -> None:
+        """Drop any cached results, forcing the next query to refetch.
+
+        Rarely needed -- the cache expires and evicts itself (see ``cache_ttl``); this
+        is the escape hatch for forcing fresh data before an entry's TTL is up. A
+        no-op when caching is off.
+        """
+        if self._cache is not None:
+            self._cache.clear()
 
     def __enter__(self) -> ECOS:
         return self
@@ -84,7 +107,7 @@ class ECOS:
 
     # -- services ----------------------------------------------------------
 
-    def get_series(
+    def fetch_series(
         self,
         stat_code: str,
         *,
@@ -117,7 +140,7 @@ class ECOS:
         ]
         return cast("list[StatRow]", self._collect("StatisticSearch", tail, lang))
 
-    def get_tables(
+    def fetch_tables(
         self,
         *,
         stat_code: str | None = None,
@@ -131,7 +154,7 @@ class ECOS:
         tail = [stat_code] if stat_code else []
         return cast("list[TableRow]", self._collect("StatisticTableList", tail, lang))
 
-    def get_items(
+    def fetch_items(
         self,
         stat_code: str,
         *,
@@ -141,7 +164,7 @@ class ECOS:
         rows = self._collect("StatisticItemList", [stat_code], lang)
         return cast("list[ItemRow]", rows)
 
-    def get_key_statistics(
+    def fetch_key_statistics(
         self,
         *,
         lang: Language | str | None = None,
@@ -149,7 +172,7 @@ class ECOS:
         """Fetch the top-100 headline indicators (service KeyStatisticList)."""
         return cast("list[KeyStatRow]", self._collect("KeyStatisticList", [], lang))
 
-    def get_glossary(
+    def fetch_glossary(
         self,
         word: str,
         *,
@@ -158,7 +181,7 @@ class ECOS:
         """Look up a statistical term (service StatisticWord)."""
         return cast("list[WordRow]", self._collect("StatisticWord", [word], lang))
 
-    def get_meta(
+    def fetch_meta(
         self,
         dataset_name: str,
         *,
@@ -176,13 +199,22 @@ class ECOS:
         tail: list[str],
         lang: Language | str | None,
     ) -> list[dict[str, Any]]:
-        return _parse.collect(
-            self._client,
+        resolved_lang = self._resolve_lang(lang)
+        key = (service, resolved_lang, tuple(tail))
+        if self._cache is not None:
+            cached = self._cache.get(key)
+            if cached is not None:
+                return cached
+        rows = _parse.collect(
+            self._http,
             service=service,
             api_key=self._api_key,
-            lang=self._resolve_lang(lang),
+            lang=resolved_lang,
             tail=tail,
         )
+        if self._cache is not None:
+            self._cache.set(key, rows)
+        return rows
 
     def _resolve_lang(self, lang: Language | str | None) -> str:
         return self._lang.value if lang is None else Language(lang).value

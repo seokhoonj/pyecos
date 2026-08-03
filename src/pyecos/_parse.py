@@ -15,9 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import httpx
-
-from ._transport import PAGE_SIZE, request_page
+from ._transport import PAGE_SIZE, _Transport
 
 # Vendor keys whose snake_case is not a plain lowercase of the original.
 _FIELD_BY_VENDOR_KEY = {
@@ -41,7 +39,7 @@ _FIELD_BY_VENDOR_KEY = {
 
 
 def collect(
-    client: httpx.Client,
+    transport: _Transport,
     *,
     service: str,
     api_key: str,
@@ -50,12 +48,12 @@ def collect(
 ) -> list[dict[str, Any]]:
     """Fetch every page of a service call and return the mapped rows."""
     return [_map_row(row) for row in _paginate(
-        client, service=service, api_key=api_key, lang=lang, tail=tail,
+        transport, service=service, api_key=api_key, lang=lang, tail=tail,
     )]
 
 
 def _paginate(
-    client: httpx.Client,
+    transport: _Transport,
     *,
     service: str,
     api_key: str,
@@ -65,8 +63,7 @@ def _paginate(
     rows: list[dict[str, Any]] = []
     start_row = 1
     while True:
-        page = request_page(
-            client,
+        page = transport.request_page(
             service=service,
             api_key=api_key,
             lang=lang,

@@ -39,7 +39,7 @@ from pyecos import ECOS, Cycle
 
 with ECOS() as ecos:
     # A statistic's observations (StatisticSearch).
-    rows = ecos.get_series(
+    rows = ecos.fetch_series(
         "722Y001",              # 시장금리
         item_code1="0101000",   # 한국은행 기준금리
         cycle=Cycle.MONTHLY,
@@ -48,14 +48,14 @@ with ECOS() as ecos:
     )
 
     # Browse the catalog.
-    tables = ecos.get_tables()             # top-level statistical tables
-    children = ecos.get_tables(stat_code="722Y001")
-    items = ecos.get_items("722Y001")      # a table's detail items
+    tables = ecos.fetch_tables()             # top-level statistical tables
+    children = ecos.fetch_tables(stat_code="722Y001")
+    items = ecos.fetch_items("722Y001")      # a table's detail items
 
     # Headline indicators, glossary, meta-DB.
-    key = ecos.get_key_statistics()        # top-100 indicators
-    word = ecos.get_glossary("DSR")
-    meta = ecos.get_meta("경제심리지수")
+    key = ecos.fetch_key_statistics()        # top-100 indicators
+    word = ecos.fetch_glossary("DSR")
+    meta = ecos.fetch_meta("경제심리지수")
 ```
 
 Every method returns a `list` of plain `dict` rows, so pandas is one line away
@@ -67,7 +67,7 @@ import pandas as pd
 frame = pd.DataFrame(rows)
 ```
 
-`get_series` returns each observation's `data_value` as a `float` (`None` when the
+`fetch_series` returns each observation's `data_value` as a `float` (`None` when the
 Bank reported it blank) and pages past the API's 100-row-per-request limit for
 you, so a multi-year daily series comes back in a single call.
 
@@ -96,7 +96,7 @@ Flags (`pyecos <command> --help` is the source of truth):
 
 ## Cycles
 
-`get_series` takes a `Cycle` (or its bare code). The `time` field of each row is
+`fetch_series` takes a `Cycle` (or its bare code). The `time` field of each row is
 formatted to match:
 
 | Cycle | Code | `time` example |
@@ -116,11 +116,15 @@ All operational errors derive from `ECOSError`:
 |---|---|
 | `ECOSConfigError` | no API key was provided |
 | `ECOSAuthError` | ECOS rejected the key |
+| `ECOSRateLimitError` | ECOS is rate-limiting the key (ERROR-602 · subclass of `ECOSResponseError`) |
 | `ECOSResponseError` | ECOS returned an error code (carries `.code` / `.message`) |
-| `ECOSNetworkError` | the request never completed |
+| `ECOSNetworkError` | the request never completed (after a transient timeout/5xx is retried) |
 
 A query that simply matches no data returns an empty list, not an error. An invalid
 `cycle` or `lang` argument raises the standard `ValueError`.
+
+When fetching in bulk, space out requests with `ECOS(delay_seconds=0.6)` to stay under
+the ECOS rate cap (~300 calls in three minutes).
 
 ## License
 
