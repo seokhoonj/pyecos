@@ -78,6 +78,8 @@ Type `ecos.` and follow the dots with editor autocomplete. Every indicator offer
 ecos.rate.base.fetch(start="202001", end="202412")  # base rate
 ecos.fx.usd.latest()                                # latest KRW/USD
 ecos.trade.exports.semiconductor.value.fetch()      # semiconductor export value index
+ecos.price.producer.dram.fetch()                    # DRAM producer price
+ecos.price.producer.nand.fetch()                    # NAND flash producer price
 ecos.stock.kospi.per.fetch()                        # KOSPI P/E
 ```
 

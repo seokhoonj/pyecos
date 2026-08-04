@@ -75,6 +75,8 @@ pd.DataFrame(rows)   # 또는 polars.DataFrame(rows)
 ecos.rate.base.fetch(start="202001", end="202412")  # 기준금리
 ecos.fx.usd.latest()                                # 원/달러 최근값
 ecos.trade.exports.semiconductor.value.fetch()      # 반도체 수출금액지수
+ecos.price.producer.dram.fetch()                    # DRAM 생산자물가
+ecos.price.producer.nand.fetch()                    # NAND플래시 생산자물가
 ecos.stock.kospi.per.fetch()                        # 코스피 PER
 ```
 
