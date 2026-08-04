@@ -235,7 +235,7 @@ ecos
 │   └── producer/
 │       ├── dram                          # DRAM 생산자물가
 │       ├── nand                          # NAND플래시 생산자물가
-│       └── system                        # 시스템반도체 생산자물가
+│       └── logic                         # 시스템반도체 생산자물가
 ├── real_estate/
 │   ├── house_sales_price                 # 주택매매가격지수
 │   ├── house_jeonse_price                # 주택전세가격지수
@@ -367,8 +367,8 @@ ecos
 | price | `ecos.price.living_cpi` | 생활물가지수 |
 | price | `ecos.price.ppi` | 생산자물가지수 |
 | price | `ecos.price.producer.dram` | DRAM 생산자물가 |
+| price | `ecos.price.producer.logic` | 시스템반도체 생산자물가 |
 | price | `ecos.price.producer.nand` | NAND플래시 생산자물가 |
-| price | `ecos.price.producer.system` | 시스템반도체 생산자물가 |
 | real_estate | `ecos.real_estate.house_jeonse_price` | 주택전세가격지수 |
 | real_estate | `ecos.real_estate.house_sales_price` | 주택매매가격지수 |
 | real_estate | `ecos.real_estate.land_price_change` | 지가변동률(전기대비) |
@@ -410,7 +410,7 @@ rows = ecos.fetch_series(
 ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # 기준금리 시계열
 ecos tables                                                     # 통계표 목록
 ecos items 722Y001                                              # 한 표의 세부 항목
-ecos key-stats                                                  # 100대 지표
+ecos key-statistics                                             # 100대 지표
 ecos glossary DSR                                               # 용어 뜻풀이
 ecos meta 경제심리지수                                          # 자료 설명
 ```
@@ -420,7 +420,7 @@ ecos meta 경제심리지수                                          # 자료 �
 | `series <통계표코드>` | 기간별 값. `--item` 세부 항목(최대 4개), `--cycle` 주기, `--start`·`--end` 기간 |
 | `tables` | 통계표 목록. `--stat-code`를 주면 그 표의 하위표 |
 | `items <통계표코드>` | 그 표의 세부 항목 |
-| `key-stats` | 100대 지표 |
+| `key-statistics` | 100대 지표 |
 | `glossary <용어>` | 용어 뜻풀이 |
 | `meta <자료명>` | 자료 설명 |
 

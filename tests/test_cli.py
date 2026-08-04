@@ -66,7 +66,7 @@ def test_json_flag_emits_the_full_rows(monkeypatch, capsys):
 def test_lang_flag_reaches_the_client(monkeypatch, capsys):
     seen = _stub_client(monkeypatch, rows=[])
 
-    cli.main(["key-stats", "--lang", "en"])
+    cli.main(["key-statistics", "--lang", "en"])
 
     assert seen["lang"] == "en"
 
@@ -85,7 +85,7 @@ def test_more_than_four_items_is_rejected(monkeypatch, capsys):
 def test_missing_key_is_reported_as_one_line(monkeypatch, capsys):
     _stub_client(monkeypatch, error=ECOSConfigError("no ECOS API key: pass api_key"))
 
-    exit_code = cli.main(["key-stats"])
+    exit_code = cli.main(["key-statistics"])
 
     err = capsys.readouterr().err
     assert exit_code == 1
@@ -164,7 +164,7 @@ def test_items_dispatches_to_fetch_items(monkeypatch):
 
 def test_key_stats_dispatches_to_fetch_key_statistics(monkeypatch):
     calls = _recording_client(monkeypatch, rows=[])
-    cli.main(["key-stats"])
+    cli.main(["key-statistics"])
     assert calls[0][0] == "fetch_key_statistics"
 
 

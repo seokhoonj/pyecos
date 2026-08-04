@@ -77,7 +77,7 @@ def test_deep_nested_path_resolves_to_leaf():
     ("path", "stat_code"),
     [
         ("household.apc", "901Y117"),            # renamed from propensity_to_consume
-        ("price.producer.system", "404Y016"),    # renamed from system_semiconductor
+        ("price.producer.logic", "404Y016"),     # 시스템반도체, non-memory
     ],
 )
 def test_renamed_accessor_still_resolves(path: str, stat_code: str):

@@ -123,4 +123,4 @@ GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 
 무역	Trade	trade	trade.imports.semiconductor.price	반도체 수입물가지수	Semiconductor Import Price Index	401Y015	30911AA			M
 물가	Prices	price	price.producer.dram	DRAM 생산자물가	DRAM Producer Price	404Y016	30911201AA			M
 물가	Prices	price	price.producer.nand	NAND플래시 생산자물가	NAND Flash Producer Price	404Y016	30911202AA			M
-물가	Prices	price	price.producer.system	시스템반도체 생산자물가	System Semiconductor Producer Price	404Y016	30911203AA			M
+물가	Prices	price	price.producer.logic	시스템반도체 생산자물가	System Semiconductor Producer Price	404Y016	30911203AA			M

@@ -238,7 +238,7 @@ ecos
 │   └── producer/
 │       ├── dram                          # DRAM Producer Price
 │       ├── nand                          # NAND Flash Producer Price
-│       └── system                        # System Semiconductor Producer Price
+│       └── logic                         # System Semiconductor Producer Price
 ├── real_estate/
 │   ├── house_sales_price                 # Housing Sales Price Index
 │   ├── house_jeonse_price                # Housing Jeonse Price Index
@@ -370,8 +370,8 @@ The full list:
 | price | `ecos.price.living_cpi` | CPI For Living Necessaries |
 | price | `ecos.price.ppi` | Producer Price Index |
 | price | `ecos.price.producer.dram` | DRAM Producer Price |
+| price | `ecos.price.producer.logic` | System Semiconductor Producer Price |
 | price | `ecos.price.producer.nand` | NAND Flash Producer Price |
-| price | `ecos.price.producer.system` | System Semiconductor Producer Price |
 | real_estate | `ecos.real_estate.house_jeonse_price` | Housing Jeonse Price Index |
 | real_estate | `ecos.real_estate.house_sales_price` | Housing Sales Price Index |
 | real_estate | `ecos.real_estate.land_price_change` | Land Price Change Rates |
@@ -413,7 +413,7 @@ is `ecos`) — the same six queries from the terminal.
 ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # base-rate series
 ecos tables                                                     # the table list
 ecos items 722Y001                                              # a table's detail items
-ecos key-stats                                                  # the top-100 indicators
+ecos key-statistics                                             # the top-100 indicators
 ecos glossary DSR                                               # a term's definition
 ecos meta 경제심리지수                                          # dataset metadata (name is Korean)
 ```
@@ -423,7 +423,7 @@ ecos meta 경제심리지수                                          # dataset 
 | `series <stat_code>` | Values over time. `--item` (up to 4), `--cycle`, `--start` / `--end` |
 | `tables` | The table list; `--stat-code` for a table's children |
 | `items <stat_code>` | A table's detail items |
-| `key-stats` | The top-100 indicators |
+| `key-statistics` | The top-100 indicators |
 | `glossary <word>` | A term's definition |
 | `meta <dataset_name>` | Dataset metadata |
 

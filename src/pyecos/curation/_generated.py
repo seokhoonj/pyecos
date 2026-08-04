@@ -1692,10 +1692,10 @@ class _PriceProducer:
                 item_code3=None,
             ),
         )
-        self.system = Indicator(
+        self.logic = Indicator(
             client,
             IndicatorSpec(
-                path="price.producer.system",
+                path="price.producer.logic",
                 name_ko="시스템반도체 생산자물가",
                 name_en="System Semiconductor Producer Price",
                 stat_code="404Y016",

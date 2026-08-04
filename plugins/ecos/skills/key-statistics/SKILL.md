@@ -1,6 +1,6 @@
 ---
 name: key-statistics
-description: "Show the Bank of Korea's top-100 headline economic indicators in one shot from ECOS. Holds no logic of its own -- it calls the pyecos package's CLI (`ecos key-stats`) and shows the result to the user. Use for a quick snapshot without needing any table code. Trigger phrases: 100대 지표, 주요 경제지표, 한은 핵심 지표, top-100 indicators, key Korean economic indicators, ECOS headline stats."
+description: "Show the Bank of Korea's top-100 headline economic indicators in one shot from ECOS. Holds no logic of its own -- it calls the pyecos package's CLI (`ecos key-statistics`) and shows the result to the user. Use for a quick snapshot without needing any table code. Trigger phrases: 100대 지표, 주요 경제지표, 한은 핵심 지표, top-100 indicators, key Korean economic indicators, ECOS headline stats."
 ---
 
 # ecos — key statistics (top-100 indicators)
@@ -26,10 +26,10 @@ The key can also be stored in `~/.config/pyecos/credentials.json` as
 ## Running
 
 ```
-ecos key-stats [--lang kr|en] [--json]
+ecos key-statistics [--lang kr|en] [--json]
 ```
 
-Options (`ecos key-stats --help` is the source of truth):
+Options (`ecos key-statistics --help` is the source of truth):
 - `--lang kr|en` — response language (default: kr).
 - `--json` — the full list as JSON instead of the text table.
 
@@ -40,7 +40,7 @@ row count.
 
 1. **Run.** No arguments are required.
    ```bash
-   ecos key-stats
+   ecos key-statistics
    ```
 2. **Relay the result.** Show the CLI's stdout. If the user asked about one indicator,
    point out its row; the list is grouped by class (interest rates, prices, ...), so you

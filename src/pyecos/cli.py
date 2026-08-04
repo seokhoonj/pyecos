@@ -9,7 +9,7 @@ so the package's single runtime dependency (``httpx``) is not widened by having 
     $ ecos series 722Y001 --item 0101000 --cycle monthly --start 202001 --end 202412
     $ ecos tables
     $ ecos items 722Y001 --json
-    $ ecos key-stats
+    $ ecos key-statistics
     $ ecos glossary DSR
 """
 
@@ -19,6 +19,7 @@ import argparse
 import json
 import sys
 from collections.abc import Callable, Mapping, Sequence
+from typing import TypeAlias
 
 from . import __version__
 from .client import ECOS
@@ -45,7 +46,7 @@ _ERROR_PREFIX = f"{_PROG}: "
 # most this many --item flags.
 _MAX_ITEM_CODES = 4
 
-Row = Mapping[str, object]
+Row: TypeAlias = Mapping[str, object]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -101,7 +102,7 @@ def _make_parser() -> argparse.ArgumentParser:
     items.set_defaults(run=_run_items)
 
     key_stats = commands.add_parser(
-        "key-stats", help="the top-100 headline indicators (KeyStatisticList)")
+        "key-statistics", help="the top-100 headline indicators (KeyStatisticList)")
     _add_shared_flags(key_stats)
     key_stats.set_defaults(run=_run_key_stats)
 
