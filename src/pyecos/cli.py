@@ -206,8 +206,8 @@ def _render_glossary(rows: Sequence[Row]) -> str:
 def _render_table(rows: Sequence[Row], columns: list[tuple[str, str]]) -> str:
     """Rows as an aligned table over ``columns`` (label, key), one row per line.
 
-    A missing or None cell prints as ``-``. A trailing count line follows so the reader
-    sees how many rows came back when the table itself is empty.
+    A missing or None cell prints as ``-``; an empty result prints ``(no rows)``.
+    A trailing ``(N rows)`` count follows a non-empty table.
     """
     if not rows:
         return "(no rows)"

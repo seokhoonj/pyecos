@@ -210,3 +210,15 @@ def test_items_renders_the_row_in_a_table(monkeypatch, capsys):
     _stub_client(monkeypatch, rows=[{"item_code": "A", "item_name": "금리"}])
     cli.main(["items", "722Y001"])
     assert "금리" in capsys.readouterr().out
+
+
+def test_empty_table_prints_no_rows(monkeypatch, capsys):
+    _stub_client(monkeypatch, rows=[])
+    cli.main(["tables"])
+    assert "(no rows)" in capsys.readouterr().out
+
+
+def test_table_renders_dash_for_a_missing_cell(monkeypatch, capsys):
+    _stub_client(monkeypatch, rows=[{"stat_code": "X"}])  # other columns absent
+    cli.main(["tables"])
+    assert "-" in capsys.readouterr().out

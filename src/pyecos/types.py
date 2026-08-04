@@ -2,11 +2,12 @@
 
 Rows come back as plain dicts (``TypedDict``) so a caller can turn them into a
 DataFrame in one line -- ``pd.DataFrame(rows)`` -- without this package ever
-importing pandas. Each ``TypedDict`` documents the fields ECOS is known to
-return; it is ``total=False`` because ECOS omits fields that do not apply to a
-given statistic, and the response parser passes through *every* key the vendor
-sends, so a field new to the API still arrives in the dict even before it is
-declared here.
+importing pandas. Each *network* row (``StatRow`` .. ``MetaRow``) is
+``total=False`` because ECOS omits fields that do not apply to a given statistic,
+and the response parser passes through *every* key the vendor sends, so a field
+new to the API still arrives in the dict even before it is declared here.
+``CatalogRow`` is the exception -- it is this package's own offline snapshot, so
+all its fields are always present (``total=True``).
 """
 
 from __future__ import annotations

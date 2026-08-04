@@ -22,8 +22,10 @@ from __future__ import annotations
 import csv
 import gzip
 import io
+from collections.abc import Iterable
 from functools import cache
 from importlib.resources import files
+from typing import cast
 
 from .types import CatalogRow
 
@@ -44,14 +46,21 @@ def _tables() -> tuple[CatalogRow, ...]:
     )
 
 
+def _copies(rows: Iterable[CatalogRow]) -> list[CatalogRow]:
+    # Hand out fresh row dicts so a caller mutating a result can't corrupt the
+    # shared snapshot -- the same isolation _Cache applies to fetched rows.
+    return [cast("CatalogRow", dict(row)) for row in rows]
+
+
 def tables() -> list[CatalogRow]:
     """Every table in the bundled catalog snapshot."""
-    return list(_tables())
+    return _copies(_tables())
 
 
 def table(stat_code: str) -> CatalogRow | None:
     """The catalog row for ``stat_code``, or ``None`` if the snapshot lacks it."""
-    return next((row for row in _tables() if row["stat_code"] == stat_code), None)
+    row = next((row for row in _tables() if row["stat_code"] == stat_code), None)
+    return cast("CatalogRow", dict(row)) if row is not None else None
 
 
 def search(query: str, *, searchable_only: bool = True) -> list[CatalogRow]:
@@ -69,4 +78,4 @@ def search(query: str, *, searchable_only: bool = True) -> list[CatalogRow]:
     ]
     if searchable_only:
         hits = [row for row in hits if row["searchable"]]
-    return hits
+    return _copies(hits)

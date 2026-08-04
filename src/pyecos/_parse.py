@@ -16,6 +16,11 @@ from __future__ import annotations
 from typing import Any
 
 from ._transport import PAGE_SIZE, _Transport
+from .exceptions import ECOSResponseError
+
+# No real ECOS series approaches a million rows; the cap turns a broken server
+# that returns full pages forever into a clear error instead of an endless loop.
+_MAX_PAGES = 10_000
 
 # Vendor keys whose snake_case is not a plain lowercase of the original.
 _FIELD_BY_VENDOR_KEY = {
@@ -62,7 +67,7 @@ def _paginate(
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     start_row = 1
-    while True:
+    for _ in range(_MAX_PAGES):
         page = transport.request_page(
             service=service,
             api_key=api_key,
@@ -82,6 +87,7 @@ def _paginate(
         if not batch or len(rows) >= total:
             return rows
         start_row += PAGE_SIZE
+    raise ECOSResponseError("UNKNOWN", f"pagination exceeded {_MAX_PAGES} pages")
 
 
 def _map_row(raw: dict[str, Any]) -> dict[str, Any]:

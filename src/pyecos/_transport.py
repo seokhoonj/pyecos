@@ -138,6 +138,12 @@ def _build_url(
     segments = [service, api_key, "json", lang, str(start_row), str(end_row), *tail]
     while segments and segments[-1] == "":  # trailing optional args ECOS omits
         segments.pop()
+    if "" in segments:
+        # A remaining empty is an interior positional gap (end without start, or
+        # item_code2 without item_code1); it would shift every later argument.
+        raise ValueError(
+            "cannot build a request with a gap between positional arguments"
+        )
     path = "/".join(quote(segment, safe="") for segment in segments)
     return f"{BASE_URL}/{path}"
 
@@ -148,6 +154,10 @@ def _extract_body(payload: Any, service: str) -> dict[str, Any]:
     if service in payload:
         body = payload[service]
         if not isinstance(body, dict):  # a non-object under the service key is bad
+            raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
+        if "row" not in body and "list_total_count" not in body:
+            # A dict under the service key that carries no page fields (e.g. a
+            # nested RESULT error) must surface, not read as an empty series.
             raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
         return body
 

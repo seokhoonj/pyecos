@@ -24,10 +24,6 @@ class ECOSConfigError(ECOSError):
     """
 
 
-class ECOSAuthError(ECOSError):
-    """ECOS rejected the API key (vendor code INFO-100)."""
-
-
 class ECOSResponseError(ECOSError):
     """ECOS returned a well-formed response carrying an error code.
 
@@ -39,6 +35,18 @@ class ECOSResponseError(ECOSError):
         self.code = code
         self.message = message
         super().__init__(f"[{code}] {message}")
+
+
+class ECOSAuthError(ECOSResponseError):
+    """ECOS rejected the API key (vendor code INFO-100).
+
+    Subclasses :class:`ECOSResponseError` -- like :class:`ECOSRateLimitError` -- so
+    it carries the vendor ``code``/``message`` and ``except ECOSResponseError``
+    catches it, while a caller can still catch an auth failure distinctly.
+    """
+
+    def __init__(self, message: str) -> None:
+        super().__init__("INFO-100", message)
 
 
 class ECOSRateLimitError(ECOSResponseError):

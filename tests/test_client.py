@@ -568,3 +568,44 @@ def test_unknown_cycle_raises_value_error():
     ecos = _client([_search_page([], 0)])
     with pytest.raises(ValueError):
         ecos.fetch_series("X", cycle="Z")
+
+
+def test_end_without_start_is_rejected():
+    ecos = _client([_search_page([], 0)])
+    with pytest.raises(ValueError):  # empty start slot -> interior gap in the path
+        ecos.fetch_series("X", end="202412")
+
+
+def test_item_code_gap_is_rejected():
+    ecos = _client([_search_page([], 0)])
+    with pytest.raises(ValueError):  # item_code1 missing but item_code2 given
+        ecos.fetch_series("X", item_code2="Z")
+
+
+def test_start_without_end_is_allowed_and_well_formed():
+    paths: list[str] = []
+    _client([_search_page([], 0)], paths).fetch_series("X", start="202001")
+    assert paths[0].endswith("/X/M/202001")  # trailing empty end trimmed, no gap
+
+
+def test_auth_error_carries_the_vendor_code_and_is_a_response_error():
+    ecos = _client([{"RESULT": {"CODE": "INFO-100", "MESSAGE": "bad key"}}])
+    with pytest.raises(ECOSResponseError) as caught:  # now catchable as ResponseError
+        ecos.fetch_series("X")
+    assert isinstance(caught.value, ECOSAuthError)
+    assert caught.value.code == "INFO-100"
+
+
+def test_service_keyed_error_body_is_not_swallowed_as_empty():
+    # A RESULT error nested under the service key must raise, not read as no-data.
+    page = {"StatisticSearch": {"RESULT": {"CODE": "ERROR-100", "MESSAGE": "sys"}}}
+    ecos = _client([page])
+    with pytest.raises(ECOSResponseError):
+        ecos.fetch_series("X")
+
+
+@pytest.mark.parametrize("sent", ["-", "N/A", "1,234"])
+def test_dash_or_unparseable_data_value_becomes_none(sent):
+    raw = {"STAT_CODE": "X", "TIME": "202401", "DATA_VALUE": sent}
+    (row,) = _client([_search_page([raw], 1)]).fetch_series("X")
+    assert row["data_value"] is None

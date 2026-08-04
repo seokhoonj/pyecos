@@ -158,7 +158,7 @@ def test_latest_returns_the_greatest_time_regardless_of_row_order():
         )
 
     ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
-    latest = ecos.rate.base.latest()
+    latest = ecos.rate.base.latest(today=date(2026, 8, 4))
     assert latest is not None
     assert latest["time"] == "202606"  # max, not rows[-1]
 
@@ -178,7 +178,7 @@ def test_latest_is_none_for_an_empty_series():
         )
 
     ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
-    assert ecos.rate.base.latest() is None
+    assert ecos.rate.base.latest(today=date(2026, 8, 4)) is None
 
 
 def test_repr_names_the_path_not_the_key():
@@ -212,3 +212,11 @@ def test_indicator_spec_is_frozen():
     )
     with pytest.raises((AttributeError, TypeError)):
         spec.stat_code = "Y"  # type: ignore[misc]
+
+
+def test_wildcard_item_code_is_percent_encoded_in_the_request():
+    # trade.exports.value uses item_code1="*AA"; ECOS decodes %2AAA back to *AA.
+    paths: list[str] = []
+    ecos = _recording_client(paths)
+    ecos.trade.exports.value.fetch(start="202601", end="202612")
+    assert "%2AAA" in paths[0]

@@ -70,7 +70,11 @@ jobs:
           names = sorted(re.split(r'[<>=!~;\[\s]', r, maxsplit=1)[0].replace('_', '-').lower() for r in runtime)
           assert names == ['httpx'], f'unexpected runtime dependencies: {runtime}'
           import pyecos
-          print('pyecos imports with only httpx present')
+          # The bundled offline catalog must ship in the wheel (source-tree tests
+          # can't catch a data file dropped from the build).
+          from pyecos import catalog
+          assert len(catalog.tables()) > 500, 'catalog.tsv.gz missing from the wheel'
+          print(f'pyecos imports with only httpx; offline catalog ships {len(catalog.tables())} tables')
           "
           # The console script runs, and its top-level --version prints (not shoved
           # into a required subcommand).
