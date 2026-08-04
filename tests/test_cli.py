@@ -88,7 +88,7 @@ def test_missing_key_is_reported_as_one_line(monkeypatch, capsys):
 
     err = capsys.readouterr().err
     assert exit_code == 1
-    assert err.startswith("pyecos: ") and "no ECOS API key" in err
+    assert err.startswith("ecos: ") and "no ECOS API key" in err
 
 
 def test_vendor_error_is_reported_as_one_line(monkeypatch, capsys):

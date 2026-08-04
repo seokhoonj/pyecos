@@ -401,15 +401,16 @@ rows = ecos.fetch_series(
 
 ## 5. 커맨드라인
 
-설치하면 `pyecos` 명령도 함께 깔립니다. 위 6가지 조회를 터미널에서 바로 할 수 있습니다.
+설치하면 `ecos` 명령이 함께 깔립니다 (설치는 `pip install pyecos`, 명령은 `ecos`). 위
+6가지 조회를 터미널에서 바로 할 수 있습니다.
 
 ```bash
-pyecos series 722Y001 --item 0101000 --start 202001 --end 202412  # 기준금리 시계열
-pyecos tables                    # 통계표 목록
-pyecos items 722Y001             # 한 표의 세부 항목
-pyecos key-stats                 # 100대 지표
-pyecos glossary DSR              # 용어 뜻풀이
-pyecos meta 경제심리지수          # 자료 설명
+ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # 기준금리 시계열
+ecos tables                    # 통계표 목록
+ecos items 722Y001             # 한 표의 세부 항목
+ecos key-stats                 # 100대 지표
+ecos glossary DSR              # 용어 뜻풀이
+ecos meta 경제심리지수          # 자료 설명
 ```
 
 | 명령 | 하는 일 |
@@ -421,8 +422,8 @@ pyecos meta 경제심리지수          # 자료 설명
 | `glossary <용어>` | 용어 뜻풀이 |
 | `meta <자료명>` | 자료 설명 |
 
-모든 명령에 `--lang en`(영어)·`--json`(JSON 출력)을 붙일 수 있고, `pyecos --version`으로
-버전을 봅니다. 더 자세히는 `pyecos <명령> --help`.
+모든 명령에 `--lang en`(영어)·`--json`(JSON 출력)을 붙일 수 있고, `ecos --version`으로
+버전을 봅니다. 더 자세히는 `ecos <명령> --help`.
 
 ## 6. 주기(cycle)
 

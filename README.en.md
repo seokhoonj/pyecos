@@ -403,15 +403,16 @@ rows at a time are stitched together and returned in one call.
 
 ## 5. Command line
 
-Installing pyecos also installs the `pyecos` command — the same six queries from the terminal.
+Installing pyecos puts the `ecos` command on PATH (the package is `pyecos`, the command
+is `ecos`) — the same six queries from the terminal.
 
 ```bash
-pyecos series 722Y001 --item 0101000 --start 202001 --end 202412  # base-rate series
-pyecos tables                    # the table list
-pyecos items 722Y001             # a table's detail items
-pyecos key-stats                 # the top-100 indicators
-pyecos glossary DSR              # a term's definition
-pyecos meta 경제심리지수          # dataset metadata
+ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # base-rate series
+ecos tables                    # the table list
+ecos items 722Y001             # a table's detail items
+ecos key-stats                 # the top-100 indicators
+ecos glossary DSR              # a term's definition
+ecos meta 경제심리지수          # dataset metadata (meta names are Korean-only)
 ```
 
 | Command | What it does |
@@ -423,8 +424,8 @@ pyecos meta 경제심리지수          # dataset metadata
 | `glossary <word>` | A term's definition |
 | `meta <dataset_name>` | Dataset metadata |
 
-Every command takes `--lang en` and `--json`; `pyecos --version` prints the version. See
-`pyecos <command> --help` for the rest.
+Every command takes `--lang en` and `--json`; `ecos --version` prints the version. See
+`ecos <command> --help` for the rest.
 
 ## 6. Cycles
 

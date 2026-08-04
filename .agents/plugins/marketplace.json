@@ -1,11 +1,19 @@
 {
   "name": "pyecos",
-  "interface": { "displayName": "pyecos" },
+  "interface": {
+    "displayName": "ecos"
+  },
   "plugins": [
     {
-      "name": "pyecos",
-      "source": { "source": "local", "path": "./plugins/pyecos" },
-      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "name": "ecos",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ecos"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
       "category": "Productivity"
     }
   ]

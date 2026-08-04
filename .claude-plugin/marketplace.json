@@ -1,17 +1,27 @@
 {
   "name": "pyecos",
-  "owner": { "name": "seokhoonj" },
+  "owner": {
+    "name": "seokhoonj"
+  },
   "description": "Read Bank of Korea ECOS economic statistics",
   "plugins": [
     {
-      "name": "pyecos",
-      "displayName": "pyecos",
-      "source": "./plugins/pyecos",
+      "name": "ecos",
+      "displayName": "ecos",
+      "source": "./plugins/ecos",
       "description": "Read Bank of Korea ECOS economic statistics",
-      "author": { "name": "seokhoonj" },
+      "author": {
+        "name": "seokhoonj"
+      },
       "homepage": "https://github.com/seokhoonj/pyecos",
       "category": "Productivity",
-      "keywords": ["ecos", "bank of korea", "korea", "economic statistics", "interest rate"]
+      "keywords": [
+        "ecos",
+        "bank of korea",
+        "korea",
+        "economic statistics",
+        "interest rate"
+      ]
     }
   ]
 }

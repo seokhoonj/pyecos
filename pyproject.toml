@@ -33,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-pyecos = "pyecos.cli:main"
+ecos = "pyecos.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/seokhoonj/pyecos"

@@ -1,4 +1,4 @@
-"""Command-line shell over ``ECOS`` -- ``pyecos series`` / ``tables`` / ``items`` / ...
+"""Command-line shell over ``ECOS`` -- ``ecos series`` / ``tables`` / ``items`` / ...
 
 The shell over the shell: it parses ``argv``, runs one library call, and renders the
 returned rows as aligned text (or ``--json``). All request and parsing knowledge stays
@@ -6,11 +6,11 @@ in the library -- this only formats what the library returns -- and it is stdlib
 so the package's single runtime dependency (``httpx``) is not widened by having a CLI.
 
     $ export ECOS_API_KEY=...
-    $ pyecos series 722Y001 --item 0101000 --cycle monthly --start 202001 --end 202412
-    $ pyecos tables
-    $ pyecos items 722Y001 --json
-    $ pyecos key-stats
-    $ pyecos glossary DSR
+    $ ecos series 722Y001 --item 0101000 --cycle monthly --start 202001 --end 202412
+    $ ecos tables
+    $ ecos items 722Y001 --json
+    $ ecos key-stats
+    $ ecos glossary DSR
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Parse ``argv``, run one call, and return a process exit code.
 
     A failure -- a missing API key, a rejected key, a vendor error, or a transport
-    problem -- is printed as a one-line ``pyecos: <message>`` to stderr and returns 1,
+    problem -- is printed as a one-line ``ecos: <message>`` to stderr and returns 1,
     so a shell caller sees a clean error rather than a traceback. Argparse handles a
     bad flag or a missing subcommand itself (exit 2).
     """
@@ -52,15 +52,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return run(args)
     except ECOSError as err:
-        print(f"pyecos: {err}", file=sys.stderr)
+        print(f"ecos: {err}", file=sys.stderr)
         return 1
 
 
 def _make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pyecos",
+        prog="ecos",
         description="Read the Bank of Korea ECOS API from the command line.")
-    parser.add_argument("--version", action="version", version=f"pyecos {__version__}")
+    parser.add_argument("--version", action="version", version=f"ecos {__version__}")
     commands = parser.add_subparsers(required=True)
 
     series = commands.add_parser(
@@ -118,7 +118,7 @@ def _add_shared_flags(command: argparse.ArgumentParser) -> None:
 
 def _run_series(args: argparse.Namespace) -> int:
     if len(args.item) > 4:
-        print("pyecos: at most 4 --item codes are allowed", file=sys.stderr)
+        print("ecos: at most 4 --item codes are allowed", file=sys.stderr)
         return 1
     items = (args.item + [None, None, None, None])[:4]
     with ECOS(lang=args.lang) as ecos:
