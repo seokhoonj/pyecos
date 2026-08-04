@@ -70,7 +70,7 @@ class ECOS(_CurationGroups):
         self,
         api_key: str | None = None,
         *,
-        lang: Language | str = Language.KOREAN,
+        lang: Language | str | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
         delay_seconds: float = 0.0,
         cache_ttl: float | None = None,
@@ -79,7 +79,7 @@ class ECOS(_CurationGroups):
         if cache_ttl is not None and cache_ttl <= 0:
             raise ValueError(f"cache_ttl must be positive seconds, got {cache_ttl}")
         self._api_key = resolve_api_key(api_key)
-        self._lang = Language(lang)
+        self._lang = Language.KOREAN if lang is None else Language(lang)
         self._client = httpx.Client(timeout=timeout, transport=transport)
         self._transport = _Transport(self._client, delay_seconds=delay_seconds)
         self._cache = _Cache(ttl=cache_ttl) if cache_ttl is not None else None

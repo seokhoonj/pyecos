@@ -113,7 +113,8 @@ class Indicator:
         """Return the most recent observation in a recent window, or ``None``.
 
         Fetches a window sized to the indicator's frequency (roughly the last few
-        years, ending at ``today`` -- the current date unless one is given) and
+        years for sub-annual cycles, about 400 days for daily, ending at ``today``
+        -- the current date unless one is given) and
         returns the observation with the greatest ``time``, so a one-liner never
         pulls the whole history and never relies on the vendor's row order. A
         series with no observation in that window -- including a discontinued one

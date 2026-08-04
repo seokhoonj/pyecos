@@ -90,3 +90,17 @@ def test_blank_environment_key_falls_through_to_file(monkeypatch):
     _write_credentials('{"ECOS_API_KEY": "FROMFILE"}')
 
     assert resolve_api_key(None) == "FROMFILE"
+
+
+def test_unreadable_credentials_file_raises_config_error():
+    path = credentials_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.mkdir()  # a directory where the file should be -> OSError on read
+    with pytest.raises(ECOSConfigError, match="could not read"):
+        resolve_api_key(None)
+
+
+def test_non_string_key_value_is_treated_as_absent():
+    _write_credentials('{"ECOS_API_KEY": 123}')
+    with pytest.raises(ECOSConfigError):
+        resolve_api_key(None)

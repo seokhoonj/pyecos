@@ -188,9 +188,9 @@ def main() -> None:
     # The one-line-per-spec emission blows past the line length on purpose; let the
     # formatter wrap it so the checked-in file passes ruff like everything else.
     subprocess.run(["ruff", "format", str(_OUT)], check=True)
-    n_ind = sum(1 for _ in _walk_leaves(root))
+    n_indicators = sum(1 for _ in _walk_leaves(root))
     rel = _OUT.relative_to(_HERE.parent)
-    print(f"wrote {rel} -- {len(root.children)} groups, {n_ind} indicators")
+    print(f"wrote {rel} -- {len(root.children)} groups, {n_indicators} indicators")
 
 
 def _walk_leaves(node: _Node) -> Iterable[_Node]:

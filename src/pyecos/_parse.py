@@ -76,8 +76,9 @@ def _paginate(
         try:
             total = int(page.get("list_total_count") or 0)
         except (TypeError, ValueError):
-            # A garbage total must not crash the loop; the empty-batch guard ends it.
-            total = len(rows)
+            # A garbage total must not truncate the series: push it past what we
+            # have so the loop keeps paging and the empty-batch guard ends it.
+            total = len(rows) + PAGE_SIZE
         if not batch or len(rows) >= total:
             return rows
         start_row += PAGE_SIZE
@@ -92,7 +93,9 @@ def _map_row(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def _to_float(text: Any) -> float | None:
-    # ECOS marks a missing observation with an empty string or a lone dash.
+    # ECOS marks a missing observation with an empty string or a lone dash; any
+    # other unparseable value also becomes None (the vendor sends plain numbers,
+    # so this only fires on genuinely malformed data, reported as missing).
     if text in (None, "", "-"):
         return None
     try:

@@ -89,7 +89,7 @@ with ECOS() as ecos:
 함께 담았습니다.
 
 <details>
-<summary>전체 지표 목록 (123개) 펼치기</summary>
+<summary>전체 지표 목록 (125개) 펼치기</summary>
 
 | 그룹 | 경로 | 지표 |
 |---|---|---|
@@ -194,6 +194,8 @@ with ECOS() as ecos:
 | external | `ecos.external.claims` | 대외채권 |
 | trade | `ecos.trade.exports.value` | 수출금액지수 |
 | trade | `ecos.trade.imports.value` | 수입금액지수 |
+| trade | `ecos.trade.exports.volume` | 수출물량지수 |
+| trade | `ecos.trade.imports.volume` | 수입물량지수 |
 | trade | `ecos.trade.terms_of_trade.net` | 순상품교역조건지수 |
 | trade | `ecos.trade.terms_of_trade.income` | 소득교역조건지수 |
 | trade | `ecos.trade.exports.price` | 수출물가지수 |

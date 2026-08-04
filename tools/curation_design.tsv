@@ -92,6 +92,8 @@ GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 
 국제수지	Balance of Payment	external	external.portfolio_investment_liabilities	증권투자(부채)	Portfolio Investment, Liabilities	301Y013	BOPF22000000			M
 통관수출입	External Trades	trade	trade.exports.value	수출금액지수	Export value index	403Y001	*AA			M
 통관수출입	External Trades	trade	trade.imports.value	수입금액지수	Import value index	403Y003	*AA			M
+통관수출입	External Trades	trade	trade.exports.volume	수출물량지수	Export volume index	403Y002	*AA			M
+통관수출입	External Trades	trade	trade.imports.volume	수입물량지수	Import volume index	403Y004	*AA			M
 통관수출입	External Trades	trade	trade.terms_of_trade.net	순상품교역조건지수	Net Barter Terms of Trade Index	403Y005	A			M
 통관수출입	External Trades	trade	trade.terms_of_trade.income	소득교역조건지수	Income Terms of Trade Index	403Y005	B			M
 대외채권/채무	External Assets/Debt	external	external.reserves.total	외환보유액	International Reserves	732Y001	99			M

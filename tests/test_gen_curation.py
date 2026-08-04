@@ -137,5 +137,11 @@ def test_generated_tree_matches_the_worksheet():
         obj: object = ecos
         for seg in path.split("."):
             obj = getattr(obj, seg)
-        assert obj.spec.stat_code == spec["stat_code"], path  # type: ignore[attr-defined]
-        assert (obj.spec.item_code1 or "") == spec["item_code1"], path  # type: ignore[attr-defined]
+        s = obj.spec  # type: ignore[attr-defined]
+        assert s.stat_code == spec["stat_code"], path
+        assert (s.item_code1 or "") == spec["item_code1"], path
+        assert (s.item_code2 or "") == spec.get("item_code2", ""), path
+        assert (s.item_code3 or "") == spec.get("item_code3", ""), path
+        assert s.cycle.value == spec["cycle"], path
+        assert s.name_ko == spec["name_ko"], path
+        assert s.name_en == spec["name_en"], path

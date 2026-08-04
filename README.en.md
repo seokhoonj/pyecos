@@ -89,7 +89,7 @@ indicators, the tree includes frequently used series (semiconductor export/impor
 value/volume/price, reserve-asset components, KOSPI/KOSDAQ market metrics).
 
 <details>
-<summary>Full indicator list (123) </summary>
+<summary>Full indicator list (125) </summary>
 
 | Group | Accessor | Indicator |
 |---|---|---|
@@ -194,6 +194,8 @@ value/volume/price, reserve-asset components, KOSPI/KOSDAQ market metrics).
 | external | `ecos.external.claims` | External Claims |
 | trade | `ecos.trade.exports.value` | Export value index |
 | trade | `ecos.trade.imports.value` | Import value index |
+| trade | `ecos.trade.exports.volume` | Export volume index |
+| trade | `ecos.trade.imports.volume` | Import volume index |
 | trade | `ecos.trade.terms_of_trade.net` | Net Barter Terms of Trade Index |
 | trade | `ecos.trade.terms_of_trade.income` | Income Terms of Trade Index |
 | trade | `ecos.trade.exports.price` | Export Price Index |

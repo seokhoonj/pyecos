@@ -1501,6 +1501,19 @@ class _TradeExports:
                 item_code3=None,
             ),
         )
+        self.volume = Indicator(
+            client,
+            IndicatorSpec(
+                path="trade.exports.volume",
+                name_ko="수출물량지수",
+                name_en="Export volume index",
+                stat_code="403Y002",
+                cycle=Cycle.MONTHLY,
+                item_code1="*AA",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
         self.price = Indicator(
             client,
             IndicatorSpec(
@@ -1573,6 +1586,19 @@ class _TradeImports:
                 name_ko="수입금액지수",
                 name_en="Import value index",
                 stat_code="403Y003",
+                cycle=Cycle.MONTHLY,
+                item_code1="*AA",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.volume = Indicator(
+            client,
+            IndicatorSpec(
+                path="trade.imports.volume",
+                name_ko="수입물량지수",
+                name_en="Import volume index",
+                stat_code="403Y004",
                 cycle=Cycle.MONTHLY,
                 item_code1="*AA",
                 item_code2=None,

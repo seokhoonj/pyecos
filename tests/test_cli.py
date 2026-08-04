@@ -191,3 +191,22 @@ def test_series_dispatch_expands_items_and_maps_cycle(monkeypatch):
     assert kwargs["item_code1"] == "A" and kwargs["item_code2"] == "B"
     assert kwargs["item_code3"] is None
     assert str(kwargs["cycle"]) == "D"  # the CLI word "daily" maps to Cycle.DAILY
+
+
+def test_missing_subcommand_exits_two():
+    with pytest.raises(SystemExit) as caught:
+        cli.main([])
+    assert caught.value.code == 2
+
+
+def test_series_renders_dash_for_a_missing_value(monkeypatch, capsys):
+    _stub_client(monkeypatch, rows=[{"stat_name": "x", "unit_name": "%",
+                                     "time": "202401", "data_value": None}])
+    cli.main(["series", "X"])
+    assert "-" in capsys.readouterr().out
+
+
+def test_items_renders_the_row_in_a_table(monkeypatch, capsys):
+    _stub_client(monkeypatch, rows=[{"item_code": "A", "item_name": "금리"}])
+    cli.main(["items", "722Y001"])
+    assert "금리" in capsys.readouterr().out

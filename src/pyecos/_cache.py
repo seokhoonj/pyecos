@@ -34,7 +34,7 @@ _Rows = list[dict[str, Any]]
 _DEFAULT_MAXSIZE = 256
 
 
-def _isolated(rows: _Rows) -> _Rows:
+def _isolate_rows(rows: _Rows) -> _Rows:
     """A copy of ``rows`` sharing none of its dicts (values are scalars)."""
     return [dict(row) for row in rows]
 
@@ -61,11 +61,11 @@ class _Cache:
             del self._entries[key]
             return None
         self._entries.move_to_end(key)  # mark most-recently-used
-        return _isolated(rows)
+        return _isolate_rows(rows)
 
     def set(self, key: _CacheKey, rows: _Rows) -> None:
         """Store an isolated copy of ``rows``, evicting the LRU entry past maxsize."""
-        self._entries[key] = (time.monotonic() + self._ttl, _isolated(rows))
+        self._entries[key] = (time.monotonic() + self._ttl, _isolate_rows(rows))
         self._entries.move_to_end(key)
         while len(self._entries) > self._maxsize:
             self._entries.popitem(last=False)  # drop the least-recently-used

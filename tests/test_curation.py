@@ -16,7 +16,9 @@ from pyecos.curation._indicator import _recent_window
 def _group_names() -> list[str]:
     """The 21 top-level group names -- the cached_property accessors on the base."""
     return [
-        n for n, v in vars(_CurationGroups).items() if isinstance(v, cached_property)
+        name
+        for name, descriptor in vars(_CurationGroups).items()
+        if isinstance(descriptor, cached_property)
     ]
 
 
@@ -110,7 +112,7 @@ def _walk_all(ecos: ECOS) -> list[Indicator]:
 
 def test_curation_covers_every_worksheet_indicator():
     ecos = _recording_client([])
-    assert len(_walk_all(ecos)) == 123
+    assert len(_walk_all(ecos)) == 125
 
 
 # -- fetch behavior -------------------------------------------------------

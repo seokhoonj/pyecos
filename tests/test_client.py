@@ -95,7 +95,7 @@ def test_fetch_series_pages_past_the_hundred_row_limit():
     rows = ecos.fetch_series("X", cycle=Cycle.MONTHLY, start="202401", end="202512")
 
     assert len(rows) == 101
-    assert rows[-1]["data_value"] == 101.0
+    assert rows[-1]["data_value"] == pytest.approx(101.0, abs=1e-9)
     assert "/1/100/" in paths[0]
     assert "/101/200/" in paths[1]
 
@@ -297,7 +297,7 @@ def test_key_statistics_parses_data_value_to_float():
     raw = {"KEYSTAT_NAME": "한국은행 기준금리", "DATA_VALUE": "2.75", "UNIT_NAME": "%"}
     (row,) = _client([_service_page("KeyStatisticList", [raw])]).fetch_key_statistics()
     assert row["keystat_name"] == "한국은행 기준금리"
-    assert row["data_value"] == 2.75
+    assert row["data_value"] == pytest.approx(2.75, abs=1e-9)
 
 
 def test_meta_maps_content_hierarchy_aliases():
@@ -359,11 +359,23 @@ def test_non_json_200_body_raises_response_error():
     assert caught.value.code == "UNKNOWN"
 
 
-def test_garbage_total_count_does_not_loop_forever():
-    page = {"StatisticSearch": {"list_total_count": "N/A",
-                                "row": [{"DATA_VALUE": "1"}]}}
-    (row,) = _client([page]).fetch_series("X")  # terminates on the empty next batch
-    assert row["data_value"] == 1.0
+def test_garbage_total_count_keeps_paging_and_does_not_truncate():
+    # A non-integer total must not truncate a multi-page series; keep paging until
+    # an empty batch. The old bug returned only the first page.
+    paths: list[str] = []
+    ecos = _client(
+        [
+            {"StatisticSearch": {"list_total_count": "N/A",
+                                 "row": [{"DATA_VALUE": str(i)} for i in range(100)]}},
+            {"StatisticSearch": {"list_total_count": "N/A",
+                                 "row": [{"DATA_VALUE": str(i)} for i in range(50)]}},
+            {"StatisticSearch": {"list_total_count": "N/A", "row": []}},
+        ],
+        paths,
+    )
+    rows = ecos.fetch_series("X")
+    assert len(rows) == 150       # both pages kept, not truncated to the first
+    assert len(paths) == 3        # paged past the garbage total to the empty page
 
 
 # --- opt-in TTL cache -------------------------------------------------------
@@ -460,10 +472,10 @@ def test_cache_stores_the_whole_paginated_result_and_a_hit_skips_all_pages():
         return httpx.Response(200, json=page)
 
     ecos = ECOS("TESTKEY", cache_ttl=3600, transport=httpx.MockTransport(handle))
-    a = ecos.fetch_series("X")
-    b = ecos.fetch_series("X")  # repeat -> whole 101-row result from one cache entry
+    first = ecos.fetch_series("X")
+    second = ecos.fetch_series("X")  # repeat -> whole 101-row result from cache
 
-    assert len(a) == len(b) == 101
+    assert len(first) == len(second) == 101
     assert len(calls) == 2  # two pages once; the repeat made no request
 
 
@@ -489,3 +501,70 @@ def test_non_positive_cache_ttl_is_rejected():
     for bad in (0, -1):
         with pytest.raises(ValueError):
             ECOS("TESTKEY", cache_ttl=bad, transport=httpx.MockTransport(lambda r: r))
+
+
+def test_http_429_maps_to_rate_limit_error():
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(
+        lambda request: httpx.Response(429, json={})))
+
+    with pytest.raises(ECOSRateLimitError) as caught:
+        ecos.fetch_series("X")
+    assert caught.value.code == "ERROR-602"
+
+
+def test_http_4xx_maps_to_network_error_without_retry():
+    attempts: list[int] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        return httpx.Response(404, text="not found")
+
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
+
+    with pytest.raises(ECOSNetworkError):
+        ecos.fetch_series("X")
+    assert len(attempts) == 1  # a 4xx is the server's answer, not retried
+
+
+def test_http_5xx_is_retried_then_succeeds(monkeypatch):
+    import pyecos._transport as transport
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)
+    attempts: list[int] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        if len(attempts) == 1:
+            return httpx.Response(500, text="oops")
+        return httpx.Response(200, json=_search_page([{"DATA_VALUE": "1"}], 1))
+
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
+
+    (row,) = ecos.fetch_series("X")
+    assert row["data_value"] == pytest.approx(1.0, abs=1e-9)
+    assert len(attempts) == 2  # one 5xx, then the retry succeeded
+
+
+def test_retry_exhaustion_chains_the_underlying_cause(monkeypatch):
+    import pyecos._transport as transport
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)
+
+    def fail(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("blip", request=request)
+
+    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(fail))
+
+    with pytest.raises(ECOSNetworkError) as caught:
+        ecos.fetch_series("X")
+    assert isinstance(caught.value.__cause__, httpx.HTTPError)  # cause is preserved
+
+
+def test_unknown_lang_raises_value_error():
+    with pytest.raises(ValueError):
+        ECOS("TESTKEY", lang="xx",
+             transport=httpx.MockTransport(lambda r: httpx.Response(200, json={})))
+
+
+def test_unknown_cycle_raises_value_error():
+    ecos = _client([_search_page([], 0)])
+    with pytest.raises(ValueError):
+        ecos.fetch_series("X", cycle="Z")

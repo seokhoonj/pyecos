@@ -23,16 +23,18 @@ from collections.abc import Callable, Mapping, Sequence
 from . import __version__
 from .client import ECOS
 from .exceptions import ECOSError
-from .types import Cycle
+from .types import Cycle, Language
 
 # The --cycle words derive from the Cycle enum so the CLI never restates the
 # taxonomy: the flag reads as words (monthly/daily), and Cycle[word.upper()] maps
 # back. A cycle added to the enum becomes an accepted choice with no edit here.
 _CYCLE_CHOICES = tuple(cycle.name.lower() for cycle in Cycle)
+# --lang codes likewise derive from the Language enum (kr/en), never restated.
+_LANG_CHOICES = tuple(lang.value for lang in Language)
 
 # How many of the most recent observations the text view of `series` prints; the full
 # series is always available with --json.
-_RECENT_OBS = 10
+_MAX_RECENT_OBS = 10
 
 Row = Mapping[str, object]
 
@@ -108,7 +110,7 @@ def _make_parser() -> argparse.ArgumentParser:
 
 
 def _add_shared_flags(command: argparse.ArgumentParser) -> None:
-    command.add_argument("--lang", choices=("kr", "en"), default=None,
+    command.add_argument("--lang", choices=_LANG_CHOICES, default=None,
                          help="response language (default: kr)")
     command.add_argument("--json", action="store_true",
                          help="emit JSON instead of text")
@@ -119,7 +121,7 @@ def _run_series(args: argparse.Namespace) -> int:
         print("pyecos: at most 4 --item codes are allowed", file=sys.stderr)
         return 1
     items = (args.item + [None, None, None, None])[:4]
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_series(
             args.stat_code, cycle=Cycle[args.cycle.upper()],
             start=args.start, end=args.end,
@@ -130,7 +132,7 @@ def _run_series(args: argparse.Namespace) -> int:
 
 
 def _run_tables(args: argparse.Namespace) -> int:
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_tables(stat_code=args.stat_code)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("code", "stat_code"), ("cycle", "cycle"),
@@ -139,7 +141,7 @@ def _run_tables(args: argparse.Namespace) -> int:
 
 
 def _run_items(args: argparse.Namespace) -> int:
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_items(args.stat_code)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("item", "item_code"), ("cycle", "cycle"), ("from", "start_time"),
@@ -148,7 +150,7 @@ def _run_items(args: argparse.Namespace) -> int:
 
 
 def _run_key_stats(args: argparse.Namespace) -> int:
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_key_statistics()
     print(_to_json(rows) if args.json else _render_table(
         rows, [("class", "class_name"), ("name", "keystat_name"),
@@ -157,14 +159,14 @@ def _run_key_stats(args: argparse.Namespace) -> int:
 
 
 def _run_glossary(args: argparse.Namespace) -> int:
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_glossary(args.word)
     print(_to_json(rows) if args.json else _render_glossary(rows))
     return 0
 
 
 def _run_meta(args: argparse.Namespace) -> int:
-    with ECOS(lang=args.lang or "kr") as ecos:
+    with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_meta(args.dataset_name)
     print(_to_json(rows) if args.json else _render_table(
         rows, [("lvl", "level"), ("code", "content_code"), ("name", "content_name")]))
@@ -184,7 +186,7 @@ def _render_series(rows: Sequence[Row], stat_code: str) -> str:
     name = rows[-1].get("stat_name") or ""
     head = f"{stat_code}  {name}  {len(rows)} obs" + (f"  [{unit}]" if unit else "")
     lines = [head]
-    for row in rows[-_RECENT_OBS:]:
+    for row in rows[-_MAX_RECENT_OBS:]:
         data_value = row.get("data_value")
         shown = "-" if data_value is None else f"{data_value:,}"
         lines.append(f"  {row.get('time', '-')!s:>10}  {shown:>16}")
@@ -211,12 +213,12 @@ def _render_table(rows: Sequence[Row], columns: list[tuple[str, str]]) -> str:
         return "(no rows)"
     labels = [label for label, _ in columns]
     cells = [[_cell(row.get(key)) for _, key in columns] for row in rows]
-    widths = [max(len(labels[i]), *(len(cell[i]) for cell in cells))
-              for i in range(len(columns))]
-    header = "  ".join(label.ljust(widths[i]) for i, label in enumerate(labels))
+    by_column = list(zip(labels, *cells, strict=True))  # each: header then its cells
+    widths = [max(len(text) for text in column) for column in by_column]
+    header = "  ".join(label.ljust(w) for label, w in zip(labels, widths, strict=True))
     body = "\n".join(
-        "  ".join(cell[i].ljust(widths[i]) for i in range(len(columns)))
-        for cell in cells)
+        "  ".join(cell.ljust(w) for cell, w in zip(row, widths, strict=True))
+        for row in cells)
     return f"{header}\n{body}\n({len(rows)} rows)"
 
 
