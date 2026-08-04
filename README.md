@@ -427,7 +427,40 @@ ecos meta 경제심리지수                                          # 자료 �
 모든 명령에 `--lang en`(영어)·`--json`(JSON 출력)을 붙일 수 있고, `ecos --version`으로
 버전을 봅니다. 더 자세히는 `ecos <명령> --help`.
 
-## 6. 조회 주기
+## 6. AI 코딩 에이전트에서 사용
+
+이 저장소는 Claude Code·Codex용 플러그인 마켓플레이스도 겸합니다 — `series`·`catalog`·
+`key-statistics`를 `ecos` 명령을 호출하는 스킬로 제공합니다. 먼저 위에서 패키지를 설치하고
+API 키를 설정하세요.
+
+### 6.1. Claude Code
+
+```
+/plugin marketplace add seokhoonj/pyecos
+/plugin install ecos@pyecos
+```
+
+그런 다음 평범하게 물어보거나("기준금리 시계열 보여줘", "소비자물가 통계표 코드 찾아줘"),
+스킬을 직접 호출하세요 — `/ecos:series 722Y001 --item 0101000`, `/ecos:key-statistics`.
+
+### 6.2. Codex
+
+```
+codex plugin marketplace add seokhoonj/pyecos
+codex plugin add ecos@pyecos
+```
+
+`series`·`catalog`·`key-statistics` 스킬은 경제지표 요청에 반응하며, `ecos <명령>`으로
+직접 실행해도 됩니다.
+
+플러그인으로 설치하지 않고 쓰려면, 스킬을 스킬 디렉터리에 symlink한 뒤 접두사(`ecos:`)
+없이 `/series`처럼 부르면 됩니다:
+
+```sh
+ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series
+```
+
+## 7. 조회 주기
 
 `fetch_series`와 `series` 명령이 받는 조회 주기입니다. 라이브러리에서는 코드(`"M"`),
 명령에서는 단어(`monthly`)를 씁니다. 각 행의 `time` 값이 주기에 맞춰 표기됩니다.
@@ -441,7 +474,7 @@ ecos meta 경제심리지수                                          # 자료 �
 | 반월 | `SM` | `semimonthly` | `202401S1` |
 | 일 | `D` | `daily` | `20240115` |
 
-## 7. 오류
+## 8. 오류
 
 | 예외 | 언제 |
 |---|---|
@@ -455,7 +488,7 @@ ecos meta 경제심리지수                                          # 자료 �
 많이 조회할 때는 `ECOS(delay_seconds=0.6)`으로 간격을 두면 제한(약 3분에 300회)을 넘지
 않습니다.
 
-## 8. 오프라인 지표 검색
+## 9. 오프라인 지표 검색
 
 125개에 없는 통계표의 코드를 찾을 때 — API 키도 인터넷도 없이, 패키지에 들어 있는 통계표
 목록에서 바로 검색합니다.

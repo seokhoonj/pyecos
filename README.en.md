@@ -430,7 +430,40 @@ ecos meta 경제심리지수                                          # dataset 
 Every command takes `--lang en` and `--json`; `ecos --version` prints the version. See
 `ecos <command> --help` for the rest.
 
-## 6. Cycles
+## 6. AI coding agents
+
+This repo doubles as a plugin marketplace for Claude Code and Codex — it ships `series`,
+`catalog`, and `key-statistics` as skills that call the `ecos` command. Install the
+package and set an API key first (above).
+
+### 6.1. Claude Code
+
+```
+/plugin marketplace add seokhoonj/pyecos
+/plugin install ecos@pyecos
+```
+
+Then just ask ("show the base-rate series", "find the table code for the CPI"), or call a
+skill directly — `/ecos:series 722Y001 --item 0101000`, `/ecos:key-statistics`.
+
+### 6.2. Codex
+
+```
+codex plugin marketplace add seokhoonj/pyecos
+codex plugin add ecos@pyecos
+```
+
+The `series`, `catalog`, and `key-statistics` skills react to a request for an economic
+statistic, and you can always run `ecos <command>` directly.
+
+Prefer not to install the plugin? Symlink a skill into your skills directory and call it
+without the `ecos:` prefix, as `/series`:
+
+```sh
+ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series
+```
+
+## 7. Cycles
 
 The observation cycle taken by `fetch_series` and the `series` command. The library uses
 the code (`"M"`), the command uses the word (`monthly`). Each row's `time` is formatted to
@@ -445,7 +478,7 @@ match.
 | Semimonthly | `SM` | `semimonthly` | `202401S1` |
 | Daily | `D` | `daily` | `20240115` |
 
-## 7. Errors
+## 8. Errors
 
 | Exception | When |
 |---|---|
@@ -459,7 +492,7 @@ All derive from `ECOSError`. A query that simply has no data is not an error —
 an empty list. For heavy use, `ECOS(delay_seconds=0.6)` paces requests under the limit
 (about 300 per 3 minutes).
 
-## 8. Offline indicator search
+## 9. Offline indicator search
 
 To find the code of a table outside the 125 — with no API key and no network, searched
 straight from a table snapshot bundled with the package.
