@@ -78,7 +78,7 @@ jobs:
           "
           # The console script runs, and its top-level --version prints (not shoved
           # into a required subcommand).
-          /tmp/bare/bin/pyecos --version
+          /tmp/bare/bin/ecos --version
 
       - name: Confirm a user's type checker can see the hints
         # Every hint in this package is invisible to a user unless py.typed ships
