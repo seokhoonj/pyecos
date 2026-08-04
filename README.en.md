@@ -45,8 +45,9 @@ Create `~/.config/pyecos/credentials.json` with:
 
 After that, a bare `ECOS()` finds this key on its own.
 
-> Prefer an environment variable? macOS/Linux: `export ECOS_API_KEY="your-key"`.
-> Windows PowerShell: `setx ECOS_API_KEY "your-key"`.
+> Prefer an environment variable? On macOS/Linux, in the terminal:
+> `export ECOS_API_KEY="your-key"`. On Windows, in PowerShell:
+> `setx ECOS_API_KEY "your-key"`.
 
 ## 2. Quickstart
 

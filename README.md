@@ -42,8 +42,8 @@ ecos = ECOS(api_key="발급받은-키")
 
 그러면 이후로는 인자 없이 `ECOS()`만 써도 이 키를 자동으로 찾습니다.
 
-> 환경변수를 선호하면 — macOS·Linux는 `export ECOS_API_KEY="발급받은-키"`,
-> Windows PowerShell은 `setx ECOS_API_KEY "발급받은-키"`.
+> 환경변수를 선호하면, macOS·Linux는 터미널에서 `export ECOS_API_KEY="발급받은-키"`,
+> Windows는 PowerShell에서 `setx ECOS_API_KEY "발급받은-키"`.
 
 ## 2. 빠른 시작
 
