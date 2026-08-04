@@ -1,0 +1,124 @@
+group_ko	group_en	group	path	name_ko	name_en	stat_code	item_code1	item_code2	item_code3	cycle
+시장금리	Market Yields	rate	rate.base	한국은행 기준금리	Bank of Korea Base Rate	722Y001	0101000			D
+시장금리	Market Yields	rate	rate.call	콜금리(익일물)	Call Rate (Overnight)	817Y002	010101000			D
+시장금리	Market Yields	rate	rate.koribor_3m	KORIBOR(3개월)	KORIBOR(3 month)	817Y002	010150000			D
+시장금리	Market Yields	rate	rate.cd_91d	CD수익률(91일)	CD(91 day)	817Y002	010502000			D
+시장금리	Market Yields	rate	rate.msb_364d	통안증권수익률(364일)	Monetary Stabilization Bonds(364 day)	817Y002	010400001			D
+시장금리	Market Yields	rate	rate.treasury_3y	국고채수익률(3년)	Treasury Bonds(3 year)	817Y002	010200000			D
+시장금리	Market Yields	rate	rate.treasury_5y	국고채수익률(5년)	Treasury Bonds(5 year)	817Y002	010200001			D
+시장금리	Market Yields	rate	rate.corporate_bond_3y	회사채수익률(3년,AA-)	Corporate Bonds(3 year, AA-)	817Y002	010300000			D
+여수신금리	Interest Rates	rate	rate.deposit	예금은행 수신금리	Interest Rate on Time & Savings Deposits of CBs & SBs	121Y002	BEABAA2			M
+여수신금리	Interest Rates	rate	rate.loan	예금은행 대출금리	Interest Rate on Loans & Discounts of CBs & SBs	121Y006	BECBLA01			M
+예금/대출금	Deposits and Loans	credit	credit.total_deposits	예금은행총예금(말잔)	Total Deposits of CBs & SBs(Avg.)	104Y013	BCB1			M
+예금/대출금	Deposits and Loans	credit	credit.total_loans	예금은행대출금(말잔)	Loans of CBs & SBs(Avg.)	104Y016	BDCA1			M
+예금/대출금	Deposits and Loans	credit	credit.household_credit	가계신용	Credit to Households	151Y001	1000000			Q
+예금/대출금	Deposits and Loans	credit	credit.household_delinquency_rate	가계대출연체율	Household Loans Delinquency Rate	141Y005	R5AB00			M
+통화량	Money Supply	money	money.m1	M1(협의통화, 평잔)	M1(Narrow Money, Avg.)	161Y002	BBLA00			M
+통화량	Money Supply	money	money.m2	M2(광의통화, 평잔)	M2(Broad Money, Avg.)	161Y006	BBHA00			M
+통화량	Money Supply	money	money.lf	Lf(평잔)	Lf(Avg.)	171Y004	LA00000			M
+통화량	Money Supply	money	money.l	L(말잔)	L(End of)	172Y002	X000000			M
+환율	Exchange Rates	fx	fx.usd	원/달러 환율(종가)	KRW/USD(Closing Rate)	731Y003	0000013			D
+환율	Exchange Rates	fx	fx.jpy	원/엔(100엔) 환율(매매기준율)	KRW/JPY(100 Yen)	731Y001	0000002			D
+환율	Exchange Rates	fx	fx.eur	원/유로 환율(매매기준율)	KRW/EURO	731Y001	0000003			D
+환율	Exchange Rates	fx	fx.cny	원/위안 환율(종가)	KRW/CNY(Closing Rate)	731Y003	0000010			D
+주식	Stocks	stock	stock.kospi.index	코스피지수	KOSPI	802Y001	0001000			D
+주식	Stocks	stock	stock.kosdaq.index	코스닥지수	KOSDAQ Index	802Y001	0089000			D
+주식	Stocks	stock	stock.kosdaq.trading_value	주식거래대금(KOSDAQ)	KOSDAQ's Trading Value	901Y014	2060000			M
+주식	Stocks	stock	stock.kospi.trading_value	주식거래대금(KOSPI)	KOSPI’s Trading Value	901Y014	1060000			M
+주식	Stocks	stock	stock.kospi.market_cap	코스피 시가총액	KOSPI Market Capitalization	901Y014	1040000			M
+주식	Stocks	stock	stock.kospi.volume	코스피 거래량	KOSPI Trading Volume	901Y014	1050000			M
+주식	Stocks	stock	stock.kospi.turnover	코스피 회전율	KOSPI Turnover Ratio	901Y014	1090000			M
+주식	Stocks	stock	stock.kospi.dividend_yield	코스피 배당수익률	KOSPI Dividend Yield	901Y014	1100000			M
+주식	Stocks	stock	stock.kospi.per	코스피 PER	KOSPI PER	901Y014	1110000			M
+주식	Stocks	stock	stock.kosdaq.market_cap	코스닥 시가총액	KOSDAQ Market Capitalization	901Y014	2040000			M
+주식	Stocks	stock	stock.kosdaq.volume	코스닥 거래량	KOSDAQ Trading Volume	901Y014	2050000			M
+주식	Stocks	stock	stock.kosdaq.turnover	코스닥 회전율	KOSDAQ Turnover Ratio	901Y014	2110000			M
+주식	Stocks	stock	stock.investor_deposits	투자자예탁금	Investor Deposits	901Y056	S23A			M
+채권	Bonds	bond	bond.trading_value	채권거래대금	Bonds Trading Value	901Y015	1			M
+채권	Bonds	bond	bond.treasury_issuance	국고채발행액	Issued Amount of Treasury Bonds	191Y001	0200000	3		M
+성장률	Growth Rates	growth	growth.gdp_growth	경제성장률(실질, 계절조정 전기대비)	GDP Growth Rate(S.A.)	200Y123	1117			Q
+성장률	Growth Rates	growth	growth.private_consumption_growth	민간소비증감률(실질, 계절조정 전기대비)	Private Consumption(S.A., % Change)	200Y102	10122			Q
+성장률	Growth Rates	growth	growth.facilities_investment_growth	설비투자증감률(실질, 계절조정 전기대비)	Facilities Investment(S.A.,% Change)	200Y102	10123			Q
+성장률	Growth Rates	growth	growth.construction_investment_growth	건설투자증감률(실질, 계절조정 전기대비)	Construction Investment(S.A.,% Change)	200Y102	10124			Q
+성장률	Growth Rates	growth	growth.exports_growth	재화의 수출 증감률(실질, 계절조정 전기대비)	Exports of Goods and Services(S.A., % Change)	200Y102	10125			Q
+소득	Income	growth	growth.gdp_nominal	GDP(명목, 계절조정)	GDP(S.A.,at Current Price)	200Y107	10601			Q
+소득	Income	growth	growth.gni_per_capita	1인당GNI	Per Capita GNI	200Y101	1010601			A
+GDP대비 비율	Ratio of GDP	growth	growth.gross_saving_ratio	총저축률	Gross Saving Ratio	200Y102	40101			Q
+GDP대비 비율	Ratio of GDP	growth	growth.gross_investment_ratio	국내총투자율	Gross Dom. Investment Ratio	200Y102	40102			Q
+GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 GNI 비율	Ratio of Exports and Imports to GNI	200Y101	901			A
+생산	Production Indice	production	production.all_industry	전산업생산지수	Index of all industry production	901Y033	A00			M
+생산	Production Indice	production	production.manufacturing.output	제조업생산지수	Manufacturing Production Index	901Y032	I11AC	2		M
+생산	Production Indice	production	production.manufacturing.shipment	제조업출하지수	Manufacturing Shipment Index	901Y032	I11AC	4		M
+생산	Production Indice	production	production.manufacturing.inventory	제조업재고지수	Manufacturing Inventory Index	901Y032	I11A			M
+생산	Production Indice	production	production.manufacturing.utilization	제조업가동률지수	Index of manufacturing capacity utilization rate	901Y035	I32A			M
+생산	Production Indice	production	production.services	서비스업생산지수	index of Services Production	901Y038	I51A			M
+생산	Production Indice	production	production.retail_wholesale	도소매업생산지수	Wholesale and Retail Production Index	901Y038	I51AB			M
+소비	Consumption Indice	consumption	consumption.retail_sales	소매판매액지수	Retail Sales Index	901Y100	G0			M
+소비	Consumption Indice	consumption	consumption.credit_card_spending	개인신용카드사용액	Amount of Personal Credit Cards Use	601Y003	201000	00		M
+소비	Consumption Indice	consumption	consumption.motor_vehicle_sales	자동차판매액지수	Motor Vehicle Sales Index	901Y100	G11			M
+투자	Invetment Indice	investment	investment.equipment	설비투자지수	Estimated Index of Equipment Investment	901Y066	I15B			M
+투자	Invetment Indice	investment	investment.machinery_shipment	설비용 기계류내수출하지수	Domestic Machinery Shipment Index	901Y036	20			M
+투자	Invetment Indice	investment	investment.machinery_orders	국내기계수주액	Value of Dom. Machinery Orders Received	901Y018	I35AAA			M
+투자	Invetment Indice	investment	investment.construction_completed	건설기성액	Value of Construction Completed	901Y104	I48A			M
+투자	Invetment Indice	investment	investment.building_permits	건축허가면적	Permits Authorized for Bldg. Construction	901Y037	I43AA	1		M
+투자	Invetment Indice	investment	investment.construction_orders	건설수주액	Value of Construction Orders Received	901Y020	I42A			M
+투자	Invetment Indice	investment	investment.construction_started	건축착공면적	Results of Construction Start	901Y103	1			M
+경기순환지표	Business Cycle Indice	business_cycle	business_cycle.coincident_index	동행지수순환변동치	Cyclical Component of Coincident Index	901Y067	I16D			M
+경기순환지표	Business Cycle Indice	business_cycle	business_cycle.leading_index	선행지수순환변동치	Cyclical Component of Leading Index	901Y067	I16E			M
+심리지표	Sentiment Indice	sentiment	sentiment.business	전산업 기업심리지수실적	Composite Business Sentiment Index	512Y013	99988			M
+심리지표	Sentiment Indice	sentiment	sentiment.consumer	소비자심리지수	Composite Consumer Sentiment Index	511Y002	FME			M
+심리지표	Sentiment Indice	sentiment	sentiment.economic	경제심리지수	Economic Sentiment Index	513Y001	E1000			M
+기업경영지표	Corporate Financial Index	corporate	corporate.manufacturing.sales_growth	제조업매출액증감률	Growth Rate of Sales in Manufacturing	501Y005	C231			A
+기업경영지표	Corporate Financial Index	corporate	corporate.manufacturing.profit_margin	제조업매출액세전순이익률	Ordinary Income to Sales in Manufacturing	501Y006	C	A	6091	A
+기업경영지표	Corporate Financial Index	corporate	corporate.manufacturing.debt_ratio	제조업부채비율	Debt Ratio in Manufacturing	501Y007	C	A	707	A
+가계	Households	household	household.income	가구당월평균소득	Monthly Ave. Income of Households	901Y117	1	I36D	I36A	Q
+가계	Households	household	household.propensity_to_consume	평균소비성향	Average of Propensity to Consume	901Y117	1	I36W	I36A	Q
+소득분배지표	Distribution Indice	household	household.gini	지니계수	Gini's Coefficient	901Y112	I38B	10		A
+소득분배지표	Distribution Indice	household	household.quintile_ratio	5분위배율	Income of Highest Quintile/Income of Lowest Quintile(by quintile, ratio)	901Y112	I38B	20		A
+고용	Employment	employment	employment.unemployment_rate	실업률	Unemployment Rate	901Y027	I61BC			M
+고용	Employment	employment	employment.employment_rate	고용률	Employment Rate	901Y027	I61E			M
+고용	Employment	employment	employment.active_population	경제활동인구	Economically Active Population	901Y027	I61B			M
+고용	Employment	employment	employment.employed_persons	취업자수	Employed Persons	901Y027	I61BA			M
+노동	Labor Index	employment	employment.hourly_wage	시간당명목임금지수	Hourly Nominal Wage Index	901Y102	A10001			Q
+노동	Labor Index	employment	employment.labor_productivity	노동생산성지수	Index of Labor Productivity	901Y107	A	I70D		Q
+노동	Labor Index	employment	employment.unit_labor_cost	단위노동비용지수	Unit Labor Cost	901Y088	E70A			Q
+인구	Population	population	population.projected	추계인구	Population Projected	901Y028	I35A			A
+인구	Population	population	population.elderly_ratio	고령인구비율	Elderly Population Ratio	901Y028	I35D			A
+인구	Population	population	population.fertility_rate	합계출산율	Total Fertility Rate	901Y028	I35E			A
+국제수지	Balance of Payment	external	external.current_account	경상수지	Current Account	301Y013	000000			M
+국제수지	Balance of Payment	external	external.direct_investment_assets	직접투자(자산)	Direct Investment, Assets	301Y013	BOPF11000000			M
+국제수지	Balance of Payment	external	external.direct_investment_liabilities	직접투자(부채)	Direct Investment, Liabilities	301Y013	BOPF12000000			M
+국제수지	Balance of Payment	external	external.portfolio_investment_assets	증권투자(자산)	Portfolio Investment, Assets	301Y013	BOPF21000000			M
+국제수지	Balance of Payment	external	external.portfolio_investment_liabilities	증권투자(부채)	Portfolio Investment, Liabilities	301Y013	BOPF22000000			M
+통관수출입	External Trades	trade	trade.exports.value	수출금액지수	Export value index	403Y001	*AA			M
+통관수출입	External Trades	trade	trade.imports.value	수입금액지수	Import value index	403Y003	*AA			M
+통관수출입	External Trades	trade	trade.terms_of_trade.net	순상품교역조건지수	Net Barter Terms of Trade Index	403Y005	A			M
+통관수출입	External Trades	trade	trade.terms_of_trade.income	소득교역조건지수	Income Terms of Trade Index	403Y005	B			M
+대외채권/채무	External Assets/Debt	external	external.reserves.total	외환보유액	International Reserves	732Y001	99			M
+대외채권/채무	External Assets/Debt	external	external.reserves.fx	외환보유액(외환)	International Reserves: Foreign Exchange	732Y001	04			M
+대외채권/채무	External Assets/Debt	external	external.reserves.gold	외환보유액(금)	International Reserves: Gold	732Y001	01			M
+대외채권/채무	External Assets/Debt	external	external.reserves.sdr	외환보유액(SDR)	International Reserves: SDRs	732Y001	02			M
+대외채권/채무	External Assets/Debt	external	external.reserves.imf	외환보유액(IMF포지션)	International Reserves: IMF Reserve Position	732Y001	03			M
+대외채권/채무	External Assets/Debt	external	external.debt	대외채무	External Debt	311Y004	A000000			Q
+대외채권/채무	External Assets/Debt	external	external.claims	대외채권	External Claims	311Y005	B000000			Q
+소비자/생산자 물가	CPI/PPI	price	price.cpi	소비자물가지수	Consumer Price Index	901Y009	0			M
+소비자/생산자 물가	CPI/PPI	price	price.core_cpi	농산물 및 석유류제외 소비자물가지수	CPI Excluding Agricultural Products & Oils	901Y010	QB			M
+소비자/생산자 물가	CPI/PPI	price	price.living_cpi	생활물가지수	CPI For Living Necessaries	901Y010	110			M
+소비자/생산자 물가	CPI/PPI	price	price.ppi	생산자물가지수	Producer Price Index	404Y014	*AA			M
+통관수출입	External Trades	trade	trade.exports.price	수출물가지수	Export Price Index	402Y014	*AA			M
+통관수출입	External Trades	trade	trade.imports.price	수입물가지수	Import Price Index	401Y015	*AA			M
+부동산 가격	Real Estate Price Indice	real_estate	real_estate.house_sales_price	주택매매가격지수	Housing Sales Price Index	901Y062	P63A			M
+부동산 가격	Real Estate Price Indice	real_estate	real_estate.house_jeonse_price	주택전세가격지수	Housing Jeonse Price Index	901Y063	P64A			M
+부동산 가격	Real Estate Price Indice	real_estate	real_estate.land_price_change	지가변동률(전기대비)	Land Price Change Rates	901Y064	P65A			M
+국제원자재가격	Commodity Price	commodity	commodity.dubai_oil	Dubai유(현물)	Dubai Crude Oil	902Y003	010102			M
+국제원자재가격	Commodity Price	commodity	commodity.gold	금	Gold Price(Spot)	902Y003	040101			M
+심리지표	Sentiment Indice	sentiment	sentiment.manufacturing_bsi	제조업업황실적BSI	BSI(Manufact. Business Con., Tendency)	512Y013	C0000	AA		M
+무역	Trade	trade	trade.exports.semiconductor.value	반도체 수출금액지수	Semiconductor Export Value Index	403Y001	30911AA			M
+무역	Trade	trade	trade.exports.semiconductor.volume	반도체 수출물량지수	Semiconductor Export Volume Index	403Y002	30911AA			M
+무역	Trade	trade	trade.exports.semiconductor.price	반도체 수출물가지수	Semiconductor Export Price Index	402Y014	30911AA			M
+무역	Trade	trade	trade.imports.semiconductor.value	반도체 수입금액지수	Semiconductor Import Value Index	403Y003	30911AA			M
+무역	Trade	trade	trade.imports.semiconductor.volume	반도체 수입물량지수	Semiconductor Import Volume Index	403Y004	30911AA			M
+무역	Trade	trade	trade.imports.semiconductor.price	반도체 수입물가지수	Semiconductor Import Price Index	401Y015	30911AA			M
+물가	Prices	price	price.producer.dram	DRAM 생산자물가	DRAM Producer Price	404Y016	30911201AA			M
+물가	Prices	price	price.producer.nand	NAND플래시 생산자물가	NAND Flash Producer Price	404Y016	30911202AA			M
+물가	Prices	price	price.producer.system_semiconductor	시스템반도체 생산자물가	System Semiconductor Producer Price	404Y016	30911203AA			M

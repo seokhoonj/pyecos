@@ -18,6 +18,7 @@ from . import _parse
 from ._cache import _Cache
 from ._config import resolve_api_key
 from ._transport import _Transport
+from .curation._generated import _CurationGroups
 from .types import (
     Cycle,
     ItemRow,
@@ -32,7 +33,7 @@ from .types import (
 _DEFAULT_TIMEOUT = 30.0
 
 
-class ECOS:
+class ECOS(_CurationGroups):
     """A client for the Bank of Korea ECOS (Economic Statistics System) API.
 
     Construct it with an API key, or leave it out to resolve one from the
@@ -41,6 +42,11 @@ class ECOS:
         with ECOS() as ecos:
             rows = ecos.fetch_series("722Y001", cycle="M",
                                    start="202001", end="202412")
+
+    For the Bank's headline series you need not remember a stat code: the client
+    carries a tree of curated indicators grouped by theme, so the call above is
+    also ``ecos.rate.base.fetch(start="202001", end="202412")``, and a
+    two-dimensional series reads ``ecos.trade.exports.semiconductor.value.fetch()``.
 
     The client owns a pooled HTTP connection, so reuse one instance across calls
     and close it when done -- as a context manager, or via :meth:`close`. Set
@@ -77,6 +83,7 @@ class ECOS:
         self._client = httpx.Client(timeout=timeout, transport=transport)
         self._transport = _Transport(self._client, delay_seconds=delay_seconds)
         self._cache = _Cache(ttl=cache_ttl) if cache_ttl is not None else None
+        self._series_client = self  # groups build lazily off this (see _CurationGroups)
 
     # -- lifecycle ---------------------------------------------------------
 
