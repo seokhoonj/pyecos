@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/pyecos)](https://pypi.org/project/pyecos/)
 [![License](https://img.shields.io/pypi/l/pyecos)](https://github.com/seokhoonj/pyecos/blob/main/LICENSE)
 
-**English** | [한국어](README.md)
+[한국어](README.md) | **English**
 
 A Python client for the [ECOS Open API](https://ecos.bok.or.kr/api/#/) — the
 Bank of Korea's Economic Statistics System. One `ECOS` object, six methods that

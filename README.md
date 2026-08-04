@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/pyecos)](https://pypi.org/project/pyecos/)
 [![License](https://img.shields.io/pypi/l/pyecos)](https://github.com/seokhoonj/pyecos/blob/main/LICENSE)
 
-[English](README.en.md) | **한국어**
+**한국어** | [English](README.en.md)
 
 한국은행 경제통계시스템 [ECOS Open API](https://ecos.bok.or.kr/api/#/)의 파이썬
 클라이언트입니다. `ECOS` 객체 하나에 ECOS 6개 서비스와 1:1로 대응하는 메서드 여섯 개,
