@@ -1087,10 +1087,10 @@ class _Household:
                 item_code3="I36A",
             ),
         )
-        self.average_propensity_to_consume = Indicator(
+        self.apc = Indicator(
             client,
             IndicatorSpec(
-                path="household.average_propensity_to_consume",
+                path="household.apc",
                 name_ko="평균소비성향",
                 name_en="Average of Propensity to Consume",
                 stat_code="901Y117",

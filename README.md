@@ -176,7 +176,7 @@ ecos
 │       └── debt_ratio                    # 제조업부채비율
 ├── household/
 │   ├── income                            # 가구당월평균소득
-│   ├── average_propensity_to_consume     # 평균소비성향
+│   ├── apc                               # 평균소비성향
 │   ├── gini                              # 지니계수
 │   └── quintile_ratio                    # 5분위배율
 ├── employment/
@@ -320,7 +320,7 @@ ecos
 | corporate | `ecos.corporate.manufacturing.debt_ratio` | 제조업부채비율 |
 | corporate | `ecos.corporate.manufacturing.profit_margin` | 제조업매출액세전순이익률 |
 | corporate | `ecos.corporate.manufacturing.sales_growth` | 제조업매출액증감률 |
-| household | `ecos.household.average_propensity_to_consume` | 평균소비성향 |
+| household | `ecos.household.apc` | 평균소비성향 |
 | household | `ecos.household.gini` | 지니계수 |
 | household | `ecos.household.income` | 가구당월평균소득 |
 | household | `ecos.household.quintile_ratio` | 5분위배율 |

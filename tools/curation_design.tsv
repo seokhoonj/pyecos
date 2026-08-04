@@ -72,7 +72,7 @@ GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 
 기업경영지표	Corporate Financial Index	corporate	corporate.manufacturing.profit_margin	제조업매출액세전순이익률	Ordinary Income to Sales in Manufacturing	501Y006	C	A	6091	A
 기업경영지표	Corporate Financial Index	corporate	corporate.manufacturing.debt_ratio	제조업부채비율	Debt Ratio in Manufacturing	501Y007	C	A	707	A
 가계	Households	household	household.income	가구당월평균소득	Monthly Ave. Income of Households	901Y117	1	I36D	I36A	Q
-가계	Households	household	household.average_propensity_to_consume	평균소비성향	Average of Propensity to Consume	901Y117	1	I36W	I36A	Q
+가계	Households	household	household.apc	평균소비성향	Average of Propensity to Consume	901Y117	1	I36W	I36A	Q
 소득분배지표	Distribution Indice	household	household.gini	지니계수	Gini's Coefficient	901Y112	I38B	10		A
 소득분배지표	Distribution Indice	household	household.quintile_ratio	5분위배율	Income of Highest Quintile/Income of Lowest Quintile(by quintile, ratio)	901Y112	I38B	20		A
 고용	Employment	employment	employment.unemployment_rate	실업률	Unemployment Rate	901Y027	I61BC			M
