@@ -36,6 +36,15 @@ _LANG_CHOICES = tuple(lang.value for lang in Language)
 # series is always available with --json.
 _MAX_RECENT_OBS = 10
 
+# The command name, single-sourced: the argparse prog, the --version banner, and the
+# stderr error prefix all derive from it, so a rename touches one line.
+_PROG = "ecos"
+_ERROR_PREFIX = f"{_PROG}: "
+
+# ECOS keys a series by up to four item codes (item_code1..4), so the CLI accepts at
+# most this many --item flags.
+_MAX_ITEM_CODES = 4
+
 Row = Mapping[str, object]
 
 
@@ -44,31 +53,33 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     A failure -- a missing API key, a rejected key, a vendor error, or a transport
     problem -- is printed as a one-line ``ecos: <message>`` to stderr and returns 1,
-    so a shell caller sees a clean error rather than a traceback. Argparse handles a
-    bad flag or a missing subcommand itself (exit 2).
+    so a shell caller sees a clean error rather than a traceback. A usage error -- a
+    bad flag, a missing subcommand (both via argparse), or too many ``--item`` codes
+    -- returns 2.
     """
     args = _make_parser().parse_args(argv)
     run: Callable[[argparse.Namespace], int] = args.run
     try:
         return run(args)
     except ECOSError as err:
-        print(f"ecos: {err}", file=sys.stderr)
+        print(f"{_ERROR_PREFIX}{err}", file=sys.stderr)
         return 1
 
 
 def _make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="ecos",
+        prog=_PROG,
         description="Read the Bank of Korea ECOS API from the command line.")
-    parser.add_argument("--version", action="version", version=f"ecos {__version__}")
+    parser.add_argument("--version", action="version", version=f"{_PROG} {__version__}")
     commands = parser.add_subparsers(required=True)
 
     series = commands.add_parser(
         "series", help="a statistic's observations over time (StatisticSearch)")
     series.add_argument("stat_code", help="a statistic table code (e.g. 722Y001)")
     series.add_argument("--item", action="append", default=[], metavar="CODE",
-                        help="an item code; repeat up to 4 to select a sub-series")
-    series.add_argument("--cycle", choices=_CYCLE_CHOICES, default="monthly",
+                        help=f"an item code; repeat up to {_MAX_ITEM_CODES} "
+                             "to select a sub-series")
+    series.add_argument("--cycle", choices=_CYCLE_CHOICES, default=None,
                         help="observation frequency (default: monthly)")
     series.add_argument("--start", default=None,
                         help="cycle-formatted period start (202001, 2020, 20200101)")
@@ -117,16 +128,19 @@ def _add_shared_flags(command: argparse.ArgumentParser) -> None:
 
 
 def _run_series(args: argparse.Namespace) -> int:
-    if len(args.item) > 4:
-        print("ecos: at most 4 --item codes are allowed", file=sys.stderr)
-        return 1
-    items = (args.item + [None, None, None, None])[:4]
+    if len(args.item) > _MAX_ITEM_CODES:
+        print(f"{_ERROR_PREFIX}at most {_MAX_ITEM_CODES} --item codes are allowed",
+              file=sys.stderr)
+        return 2
+    items = (args.item + [None] * _MAX_ITEM_CODES)[:_MAX_ITEM_CODES]
+    # Omit cycle unless the user set it, so the library owns the default (Cycle.MONTHLY)
+    # -- mirroring --lang, which forwards None rather than restating the default here.
+    cycle_kw = {"cycle": Cycle[args.cycle.upper()]} if args.cycle else {}
     with ECOS(lang=args.lang) as ecos:
         rows = ecos.fetch_series(
-            args.stat_code, cycle=Cycle[args.cycle.upper()],
-            start=args.start, end=args.end,
+            args.stat_code, start=args.start, end=args.end,
             item_code1=items[0], item_code2=items[1],
-            item_code3=items[2], item_code4=items[3])
+            item_code3=items[2], item_code4=items[3], **cycle_kw)
     print(_to_json(rows) if args.json else _render_series(rows, args.stat_code))
     return 0
 

@@ -77,8 +77,9 @@ def test_more_than_four_items_is_rejected(monkeypatch, capsys):
     items = sum((["--item", str(i)] for i in range(5)), [])
     exit_code = cli.main(["series", "X", *items])
 
-    assert exit_code == 1
-    assert "at most 4" in capsys.readouterr().err
+    assert exit_code == 2  # a usage error, like argparse's own
+    err = capsys.readouterr().err
+    assert err.startswith("ecos: ") and "at most 4" in err
 
 
 def test_missing_key_is_reported_as_one_line(monkeypatch, capsys):

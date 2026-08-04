@@ -73,6 +73,25 @@ def test_deep_nested_path_resolves_to_leaf():
     assert ind.spec.path == "trade.exports.semiconductor.value"
 
 
+@pytest.mark.parametrize(
+    ("path", "stat_code"),
+    [
+        ("household.apc", "901Y117"),            # renamed from propensity_to_consume
+        ("price.producer.system", "404Y016"),    # renamed from system_semiconductor
+    ],
+)
+def test_renamed_accessor_still_resolves(path: str, stat_code: str):
+    # The count/spec walks stay green through a rename (125 stays 125), so a codegen
+    # or TSV rename that dropped or misspelled one would ship untested -- name them.
+    ecos = _recording_client([])
+    node: object = ecos
+    for segment in path.split("."):
+        node = getattr(node, segment)
+    assert isinstance(node, Indicator)
+    assert node.spec.path == path
+    assert node.spec.stat_code == stat_code
+
+
 def test_import_direction_uses_plural_to_dodge_keyword():
     ecos = _recording_client([])
     # `import` is a Python keyword; the branch is named `imports`.
