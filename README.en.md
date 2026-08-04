@@ -179,7 +179,7 @@ ecos
 │       └── debt_ratio                    # Debt Ratio in Manufacturing
 ├── household/
 │   ├── income                            # Monthly Ave. Income of Households
-│   ├── propensity_to_consume             # Average of Propensity to Consume
+│   ├── average_propensity_to_consume     # Average of Propensity to Consume
 │   ├── gini                              # Gini's Coefficient
 │   └── quintile_ratio                    # Income of Highest Quintile/Income of Lowest Quintile(by quintile, ratio)
 ├── employment/
@@ -323,9 +323,9 @@ The full list:
 | corporate | `ecos.corporate.manufacturing.debt_ratio` | Debt Ratio in Manufacturing |
 | corporate | `ecos.corporate.manufacturing.profit_margin` | Ordinary Income to Sales in Manufacturing |
 | corporate | `ecos.corporate.manufacturing.sales_growth` | Growth Rate of Sales in Manufacturing |
+| household | `ecos.household.average_propensity_to_consume` | Average of Propensity to Consume |
 | household | `ecos.household.gini` | Gini's Coefficient |
 | household | `ecos.household.income` | Monthly Ave. Income of Households |
-| household | `ecos.household.propensity_to_consume` | Average of Propensity to Consume |
 | household | `ecos.household.quintile_ratio` | Income of Highest Quintile/Income of Lowest Quintile(by quintile, ratio) |
 | employment | `ecos.employment.active_population` | Economically Active Population |
 | employment | `ecos.employment.employed_persons` | Employed Persons |
