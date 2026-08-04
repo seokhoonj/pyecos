@@ -117,3 +117,16 @@ class MetaRow(TypedDict, total=False):
     parent_content_code: str
     content_code: str
     content_name: str
+
+
+class CatalogRow(TypedDict):
+    """One table in the bundled offline catalog (see :mod:`pyecos.catalog`).
+
+    Unlike the network :class:`TableRow`, this is the package's own curated
+    snapshot, so ``searchable`` is a real ``bool`` (the vendor's ``"Y"``/``"N"``).
+    """
+
+    stat_code: str
+    stat_name: str
+    cycle: str
+    searchable: bool  # True if the table serves observations (fetch_series works)

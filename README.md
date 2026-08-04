@@ -71,6 +71,22 @@ frame = pd.DataFrame(rows)
 경우 `None`), 요청당 100건 제한을 알아서 넘겨 페이지네이션하므로 여러 해치 일별 시계열도
 한 번의 호출로 돌아옵니다.
 
+## 오프라인 카탈로그
+
+어떤 통계표(`stat_code`)가 필요한지 찾을 때, 네트워크 없이 패키지에 동봉된 스냅샷에서
+바로 검색할 수 있습니다 (API 키도 필요 없음).
+
+```python
+from pyecos import catalog
+
+catalog.search("소비자물가")   # 이름·코드로 검색 -> [{stat_code, stat_name, cycle, searchable}, ...]
+catalog.table("901Y009")      # 특정 표 한 줄, 없으면 None
+catalog.tables()              # 전체 스냅샷 (834개 표)
+```
+
+스냅샷은 특정 시점 사본입니다. 실시간 목록이나 표의 세부 항목은
+`ecos.fetch_tables()` / `ecos.fetch_items()`를 쓰세요.
+
 ## 큐레이션 지표
 
 통계표 코드를 외우는 대신, **이름으로** 한국은행 주요 지표에 접근할 수 있습니다.
@@ -218,6 +234,174 @@ with ECOS() as ecos:
 | real_estate | `ecos.real_estate.land_price_change` | 지가변동률(전기대비) |
 | commodity | `ecos.commodity.dubai_oil` | Dubai유(현물) |
 | commodity | `ecos.commodity.gold` | 금 |
+
+</details>
+
+<details>
+<summary>접근자 트리 (구조) 펼치기</summary>
+
+`name/` 은 네임스페이스, 나머지 leaf는 지표입니다. leaf에서 `.fetch(start, end)` 또는 `.latest()`를 호출합니다 (예: `ecos.rate.base.fetch(...)`).
+
+```
+ecos
+├── rate/
+│   ├── base
+│   ├── call
+│   ├── koribor_3m
+│   ├── cd_91d
+│   ├── msb_364d
+│   ├── treasury_3y
+│   ├── treasury_5y
+│   ├── corporate_bond_3y
+│   ├── deposit
+│   └── loan
+├── credit/
+│   ├── total_deposits
+│   ├── total_loans
+│   ├── household_credit
+│   └── household_delinquency_rate
+├── money/
+│   ├── m1
+│   ├── m2
+│   ├── lf
+│   └── l
+├── fx/
+│   ├── usd
+│   ├── jpy
+│   ├── eur
+│   └── cny
+├── stock/
+│   ├── kospi/
+│   │   ├── index
+│   │   ├── trading_value
+│   │   ├── market_cap
+│   │   ├── volume
+│   │   ├── turnover
+│   │   ├── dividend_yield
+│   │   └── per
+│   ├── kosdaq/
+│   │   ├── index
+│   │   ├── trading_value
+│   │   ├── market_cap
+│   │   ├── volume
+│   │   └── turnover
+│   └── investor_deposits
+├── bond/
+│   ├── trading_value
+│   └── treasury_issuance
+├── growth/
+│   ├── gdp_growth
+│   ├── private_consumption_growth
+│   ├── facilities_investment_growth
+│   ├── construction_investment_growth
+│   ├── exports_growth
+│   ├── gdp_nominal
+│   ├── gni_per_capita
+│   ├── gross_saving_ratio
+│   ├── gross_investment_ratio
+│   └── trade_to_gni_ratio
+├── production/
+│   ├── all_industry
+│   ├── manufacturing/
+│   │   ├── output
+│   │   ├── shipment
+│   │   ├── inventory
+│   │   └── utilization
+│   ├── services
+│   └── retail_wholesale
+├── consumption/
+│   ├── retail_sales
+│   ├── credit_card_spending
+│   └── motor_vehicle_sales
+├── investment/
+│   ├── equipment
+│   ├── machinery_shipment
+│   ├── machinery_orders
+│   ├── construction_completed
+│   ├── building_permits
+│   ├── construction_orders
+│   └── construction_started
+├── business_cycle/
+│   ├── coincident_index
+│   └── leading_index
+├── sentiment/
+│   ├── business
+│   ├── consumer
+│   ├── economic
+│   └── manufacturing_bsi
+├── corporate/
+│   └── manufacturing/
+│       ├── sales_growth
+│       ├── profit_margin
+│       └── debt_ratio
+├── household/
+│   ├── income
+│   ├── propensity_to_consume
+│   ├── gini
+│   └── quintile_ratio
+├── employment/
+│   ├── unemployment_rate
+│   ├── employment_rate
+│   ├── active_population
+│   ├── employed_persons
+│   ├── hourly_wage
+│   ├── labor_productivity
+│   └── unit_labor_cost
+├── population/
+│   ├── projected
+│   ├── elderly_ratio
+│   └── fertility_rate
+├── external/
+│   ├── current_account
+│   ├── direct_investment_assets
+│   ├── direct_investment_liabilities
+│   ├── portfolio_investment_assets
+│   ├── portfolio_investment_liabilities
+│   ├── reserves/
+│   │   ├── total
+│   │   ├── fx
+│   │   ├── gold
+│   │   ├── sdr
+│   │   └── imf
+│   ├── debt
+│   └── claims
+├── trade/
+│   ├── exports/
+│   │   ├── value
+│   │   ├── volume
+│   │   ├── price
+│   │   └── semiconductor/
+│   │       ├── value
+│   │       ├── volume
+│   │       └── price
+│   ├── imports/
+│   │   ├── value
+│   │   ├── volume
+│   │   ├── price
+│   │   └── semiconductor/
+│   │       ├── value
+│   │       ├── volume
+│   │       └── price
+│   └── terms_of_trade/
+│       ├── net
+│       └── income
+├── price/
+│   ├── cpi
+│   ├── core_cpi
+│   ├── living_cpi
+│   ├── ppi
+│   └── producer/
+│       ├── dram
+│       ├── nand
+│       └── system_semiconductor
+├── real_estate/
+│   ├── house_sales_price
+│   ├── house_jeonse_price
+│   └── land_price_change
+└── commodity/
+    ├── dubai_oil
+    └── gold
+```
 
 </details>
 

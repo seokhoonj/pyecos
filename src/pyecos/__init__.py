@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
 
+from . import catalog
 from .client import ECOS
 from .curation import Indicator, IndicatorSpec
 from .exceptions import (
@@ -15,6 +16,7 @@ from .exceptions import (
     ECOSResponseError,
 )
 from .types import (
+    CatalogRow,
     Cycle,
     ItemRow,
     KeyStatRow,
@@ -32,11 +34,13 @@ except PackageNotFoundError:  # running from a source tree without an install
 
 __all__ = [
     "ECOS",
+    "catalog",
     "Indicator",
     "IndicatorSpec",
     "Cycle",
     "Language",
     "StatRow",
+    "CatalogRow",
     "TableRow",
     "ItemRow",
     "KeyStatRow",
