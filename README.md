@@ -410,9 +410,8 @@ ecos tables                                                     # 통계표 목�
 ecos items 722Y001                                              # 한 표의 세부 항목
 ecos key-stats                                                  # 100대 지표
 ecos glossary DSR                                               # 용어 뜻풀이
+ecos meta 경제심리지수                                          # 자료 설명
 ```
-
-`meta`만 자료명이 한국어라(예: `ecos meta 경제심리지수`) 예시에서 뺐고, 아래 표에 있습니다.
 
 | 명령 | 하는 일 |
 |---|---|

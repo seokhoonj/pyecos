@@ -413,10 +413,8 @@ ecos tables                                                     # the table list
 ecos items 722Y001                                              # a table's detail items
 ecos key-stats                                                  # the top-100 indicators
 ecos glossary DSR                                               # a term's definition
+ecos meta 경제심리지수                                          # dataset metadata (name is Korean)
 ```
-
-Only `meta` needs a Korean dataset name (e.g. `ecos meta 경제심리지수`), so it is left
-out of the examples above; it stays in the table.
 
 | Command | What it does |
 |---|---|
