@@ -409,12 +409,14 @@ is `ecos`) — the same six queries from the terminal.
 
 ```bash
 ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # base-rate series
-ecos tables                    # the table list
-ecos items 722Y001             # a table's detail items
-ecos key-stats                 # the top-100 indicators
-ecos glossary DSR              # a term's definition
-ecos meta 경제심리지수          # dataset metadata (meta names are Korean-only)
+ecos tables                                                     # the table list
+ecos items 722Y001                                              # a table's detail items
+ecos key-stats                                                  # the top-100 indicators
+ecos glossary DSR                                               # a term's definition
 ```
+
+Only `meta` needs a Korean dataset name (e.g. `ecos meta 경제심리지수`), so it is left
+out of the examples above; it stays in the table.
 
 | Command | What it does |
 |---|---|

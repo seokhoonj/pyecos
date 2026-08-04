@@ -401,17 +401,18 @@ rows = ecos.fetch_series(
 
 ## 5. 커맨드라인
 
-설치하면 `ecos` 명령이 함께 깔립니다 (설치는 `pip install pyecos`, 명령은 `ecos`). 위
-6가지 조회를 터미널에서 바로 할 수 있습니다.
+설치하면 `ecos` 명령이 함께 깔립니다 (설치는 `pip install pyecos`, 명령은 `ecos`).
+터미널에서 6가지 조회를 바로 할 수 있습니다.
 
 ```bash
 ecos series 722Y001 --item 0101000 --start 202001 --end 202412  # 기준금리 시계열
-ecos tables                    # 통계표 목록
-ecos items 722Y001             # 한 표의 세부 항목
-ecos key-stats                 # 100대 지표
-ecos glossary DSR              # 용어 뜻풀이
-ecos meta 경제심리지수          # 자료 설명
+ecos tables                                                     # 통계표 목록
+ecos items 722Y001                                              # 한 표의 세부 항목
+ecos key-stats                                                  # 100대 지표
+ecos glossary DSR                                               # 용어 뜻풀이
 ```
+
+`meta`만 자료명이 한국어라(예: `ecos meta 경제심리지수`) 예시에서 뺐고, 아래 표에 있습니다.
 
 | 명령 | 하는 일 |
 |---|---|
@@ -425,7 +426,7 @@ ecos meta 경제심리지수          # 자료 설명
 모든 명령에 `--lang en`(영어)·`--json`(JSON 출력)을 붙일 수 있고, `ecos --version`으로
 버전을 봅니다. 더 자세히는 `ecos <명령> --help`.
 
-## 6. 주기(cycle)
+## 6. 조회 주기
 
 `fetch_series`와 `series` 명령이 받는 조회 주기입니다. 라이브러리에서는 코드(`"M"`),
 명령에서는 단어(`monthly`)를 씁니다. 각 행의 `time` 값이 주기에 맞춰 표기됩니다.
