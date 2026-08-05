@@ -17,8 +17,8 @@ population and households, the balance of payments, reserves and external debt, 
 import prices and volumes, housing / land prices, and the policy and market rates of
 major economies (US, Japan, China, euro area, UK, Korea, Canada, India, and more).
 
-Frequently-used indicators are reached **by name** (like `ecos.rate.base`); everything
-else is fetched by its statistic-table code.
+Frequently-used indicators are reached through an **accessor** (like `ecos.rate.base`);
+everything else is fetched by its statistic-table code.
 
 ## 1. Install
 
