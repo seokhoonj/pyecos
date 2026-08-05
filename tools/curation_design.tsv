@@ -124,3 +124,19 @@ GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 
 물가	Prices	price	price.producer.dram	DRAM 생산자물가	DRAM Producer Price	404Y016	30911201AA			M
 물가	Prices	price	price.producer.nand	NAND플래시 생산자물가	NAND Flash Producer Price	404Y016	30911202AA			M
 물가	Prices	price	price.producer.logic	시스템반도체 생산자물가	System Semiconductor Producer Price	404Y016	30911203AA			M
+주요국 금리	Global Rates	world	world.rate.policy.us	미국 정책금리	US Policy Rate	902Y006	US			M
+주요국 금리	Global Rates	world	world.rate.policy.jp	일본 정책금리	Japan Policy Rate	902Y006	JP			M
+주요국 금리	Global Rates	world	world.rate.policy.cn	중국 정책금리	China Policy Rate	902Y006	CN			M
+주요국 금리	Global Rates	world	world.rate.policy.euro	유로 지역 정책금리	Euro Area Policy Rate	902Y006	XM			M
+주요국 금리	Global Rates	world	world.rate.policy.uk	영국 정책금리	UK Policy Rate	902Y006	GB			M
+주요국 금리	Global Rates	world	world.rate.policy.kr	한국 정책금리	Korea Policy Rate	902Y006	KR			M
+주요국 금리	Global Rates	world	world.rate.market.us.long	미국 장기금리	US Long-term Rate	902Y023	IRLT	USA		M
+주요국 금리	Global Rates	world	world.rate.market.us.short	미국 단기금리	US Short-term Rate	902Y023	IR3TIB	USA		M
+주요국 금리	Global Rates	world	world.rate.market.jp.long	일본 장기금리	Japan Long-term Rate	902Y023	IRLT	JPN		M
+주요국 금리	Global Rates	world	world.rate.market.jp.short	일본 단기금리	Japan Short-term Rate	902Y023	IR3TIB	JPN		M
+주요국 금리	Global Rates	world	world.rate.market.cn.long	중국 장기금리	China Long-term Rate	902Y023	IRLT	CHN		M
+주요국 금리	Global Rates	world	world.rate.market.cn.short	중국 단기금리	China Short-term Rate	902Y023	IR3TIB	CHN		M
+주요국 금리	Global Rates	world	world.rate.market.uk.long	영국 장기금리	UK Long-term Rate	902Y023	IRLT	GBR		M
+주요국 금리	Global Rates	world	world.rate.market.uk.short	영국 단기금리	UK Short-term Rate	902Y023	IR3TIB	GBR		M
+주요국 금리	Global Rates	world	world.rate.market.kr.long	한국 장기금리	Korea Long-term Rate	902Y023	IRLT	KOR		M
+주요국 금리	Global Rates	world	world.rate.market.kr.short	한국 단기금리	Korea Short-term Rate	902Y023	IR3TIB	KOR		M

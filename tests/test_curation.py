@@ -14,7 +14,7 @@ from pyecos.curation._indicator import _recent_window
 
 
 def _group_names() -> list[str]:
-    """The 21 top-level group names -- the cached_property accessors on the base."""
+    """The 22 top-level group names -- the cached_property accessors on the base."""
     return [
         name
         for name, descriptor in vars(_CurationGroups).items()
@@ -106,6 +106,43 @@ def test_three_dimensional_indicator_carries_all_item_codes():
     assert codes == ("C", "A", "6091")
 
 
+def test_world_policy_rate_carries_the_country_item_code():
+    # 902Y006 is one-dimensional: item_code1 is the country (ISO-2), nothing else.
+    ecos = _recording_client([])
+    ind = ecos.world.rate.policy.us
+    assert ind.spec.stat_code == "902Y006"
+    assert ind.spec.item_code1 == "US"
+    assert ind.spec.item_code2 is None
+    assert ind.spec.cycle is Cycle.MONTHLY
+
+
+@pytest.mark.parametrize(
+    ("country", "iso3"),
+    [("us", "USA"), ("jp", "JPN"), ("cn", "CHN"), ("uk", "GBR"), ("kr", "KOR")],
+)
+def test_world_market_rate_carries_maturity_then_country(country: str, iso3: str):
+    # 902Y023 is two-dimensional: item_code1 is the maturity (IRLT long / IR3TIB
+    # short), item_code2 the country in ISO-3 -- a different code system than the
+    # ISO-2 of 902Y006. Every country is asserted so a code-system mixup (a market
+    # leaf carrying policy's ISO-2 "GB" instead of "GBR") cannot pass silently.
+    ecos = _recording_client([])
+    market = getattr(ecos.world.rate.market, country)
+    long_codes = (market.long.spec.item_code1, market.long.spec.item_code2)
+    short_codes = (market.short.spec.item_code1, market.short.spec.item_code2)
+    assert market.long.spec.stat_code == "902Y023"
+    assert long_codes == ("IRLT", iso3)
+    assert short_codes == ("IR3TIB", iso3)
+
+
+def test_world_market_rate_omits_euro_area_without_an_ecos_series():
+    # 902Y023 carries no euro-area aggregate (only individual members), so market
+    # deliberately has no `euro` leaf even though policy (902Y006) does -- guard the
+    # asymmetry so a future stray addition is caught.
+    ecos = _recording_client([])
+    assert not hasattr(ecos.world.rate.market, "euro")
+    assert set(vars(ecos.world.rate.market)) == {"us", "jp", "cn", "uk", "kr"}
+
+
 def test_every_group_hangs_off_the_client():
     ecos = _recording_client([])
     for group in _group_names():
@@ -131,7 +168,7 @@ def _walk_all(ecos: ECOS) -> list[Indicator]:
 
 def test_curation_covers_every_worksheet_indicator():
     ecos = _recording_client([])
-    assert len(_walk_all(ecos)) == 125
+    assert len(_walk_all(ecos)) == 141
 
 
 # -- fetch behavior -------------------------------------------------------

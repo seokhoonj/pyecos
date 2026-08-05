@@ -14,9 +14,10 @@ Policy and market interest rates, exchange rates, money supply and bank deposits
 the KOSPI and KOSDAQ, consumer and producer prices, GDP and growth, production /
 consumption / investment, business and consumer sentiment, employment and wages,
 population and households, the balance of payments, reserves and external debt, export /
-import prices and volumes, and housing / land prices.
+import prices and volumes, housing / land prices, and the policy and market rates of
+major economies (US, Japan, China, euro area, UK, and Korea).
 
-The 125 most-used indicators are reached **by name** (like `ecos.rate.base`); everything
+The 141 most-used indicators are reached **by name** (like `ecos.rate.base`); everything
 else is fetched by its statistic-table code.
 
 ## 1. Install
@@ -66,9 +67,9 @@ import pandas as pd
 pd.DataFrame(rows)   # or polars.DataFrame(rows)
 ```
 
-## 3. 125 indicators by name
+## 3. 141 indicators by name
 
-Instead of memorizing table codes, reach the 125 most-used indicators as `ecos.group.indicator`.
+Instead of memorizing table codes, reach the 141 most-used indicators as `ecos.group.indicator`.
 Type `ecos.` and follow the dots with editor autocomplete. Every indicator offers two calls.
 
 - `.fetch(start, end)` — the whole series over a period
@@ -243,9 +244,34 @@ ecos
 │   ├── house_sales_price                 # Housing Sales Price Index
 │   ├── house_jeonse_price                # Housing Jeonse Price Index
 │   └── land_price_change                 # Land Price Change Rates
-└── commodity/
-    ├── dubai_oil                         # Dubai Crude Oil
-    └── gold                              # Gold Price(Spot)
+├── commodity/
+│   ├── dubai_oil                         # Dubai Crude Oil
+│   └── gold                              # Gold Price(Spot)
+└── world/
+    └── rate/
+        ├── policy/
+        │   ├── us                        # US Policy Rate
+        │   ├── jp                        # Japan Policy Rate
+        │   ├── cn                        # China Policy Rate
+        │   ├── euro                      # Euro Area Policy Rate
+        │   ├── uk                        # UK Policy Rate
+        │   └── kr                        # Korea Policy Rate
+        └── market/                       # no euro-area market series in ECOS, so it is omitted
+            ├── us/
+            │   ├── long                  # US Long-term Rate
+            │   └── short                 # US Short-term Rate
+            ├── jp/
+            │   ├── long                  # Japan Long-term Rate
+            │   └── short                 # Japan Short-term Rate
+            ├── cn/
+            │   ├── long                  # China Long-term Rate
+            │   └── short                 # China Short-term Rate
+            ├── uk/
+            │   ├── long                  # UK Long-term Rate
+            │   └── short                 # UK Short-term Rate
+            └── kr/
+                ├── long                  # Korea Long-term Rate
+                └── short                 # Korea Short-term Rate
 ```
 
 The full list:
@@ -377,10 +403,26 @@ The full list:
 | real_estate | `ecos.real_estate.land_price_change` | Land Price Change Rates |
 | commodity | `ecos.commodity.dubai_oil` | Dubai Crude Oil |
 | commodity | `ecos.commodity.gold` | Gold Price(Spot) |
+| world | `ecos.world.rate.market.cn.long` | China Long-term Rate |
+| world | `ecos.world.rate.market.cn.short` | China Short-term Rate |
+| world | `ecos.world.rate.market.jp.long` | Japan Long-term Rate |
+| world | `ecos.world.rate.market.jp.short` | Japan Short-term Rate |
+| world | `ecos.world.rate.market.kr.long` | Korea Long-term Rate |
+| world | `ecos.world.rate.market.kr.short` | Korea Short-term Rate |
+| world | `ecos.world.rate.market.uk.long` | UK Long-term Rate |
+| world | `ecos.world.rate.market.uk.short` | UK Short-term Rate |
+| world | `ecos.world.rate.market.us.long` | US Long-term Rate |
+| world | `ecos.world.rate.market.us.short` | US Short-term Rate |
+| world | `ecos.world.rate.policy.cn` | China Policy Rate |
+| world | `ecos.world.rate.policy.euro` | Euro Area Policy Rate |
+| world | `ecos.world.rate.policy.jp` | Japan Policy Rate |
+| world | `ecos.world.rate.policy.kr` | Korea Policy Rate |
+| world | `ecos.world.rate.policy.uk` | UK Policy Rate |
+| world | `ecos.world.rate.policy.us` | US Policy Rate |
 
 ## 4. Everything else
 
-Statistics outside the 125 are fetched by table code. pyecos exposes ECOS's six queries
+Statistics outside the 141 are fetched by table code. pyecos exposes ECOS's six queries
 as-is; each returns a `list` of `dict`.
 
 | Call | What it does |
@@ -494,7 +536,7 @@ an empty list. For heavy use, `ECOS(delay_seconds=0.6)` paces requests under the
 
 ## 9. Offline indicator search
 
-To find the code of a table outside the 125 — with no API key and no network, searched
+To find the code of a table outside the 141 — with no API key and no network, searched
 straight from a table snapshot bundled with the package.
 
 ```python

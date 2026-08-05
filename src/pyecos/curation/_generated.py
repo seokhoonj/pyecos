@@ -1843,6 +1843,276 @@ class _Commodity:
         )
 
 
+class _WorldRatePolicy:
+    """Curated indicators under ``world.rate.policy``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.us = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.us",
+                name_ko="미국 정책금리",
+                name_en="US Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="US",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.jp = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.jp",
+                name_ko="일본 정책금리",
+                name_en="Japan Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="JP",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.cn = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.cn",
+                name_ko="중국 정책금리",
+                name_en="China Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="CN",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.euro = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.euro",
+                name_ko="유로 지역 정책금리",
+                name_en="Euro Area Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="XM",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.uk = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.uk",
+                name_ko="영국 정책금리",
+                name_en="UK Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="GB",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.kr = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.kr",
+                name_ko="한국 정책금리",
+                name_en="Korea Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="KR",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketUs:
+    """Curated indicators under ``world.rate.market.us``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.us.long",
+                name_ko="미국 장기금리",
+                name_en="US Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="USA",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.us.short",
+                name_ko="미국 단기금리",
+                name_en="US Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="USA",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketJp:
+    """Curated indicators under ``world.rate.market.jp``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.jp.long",
+                name_ko="일본 장기금리",
+                name_en="Japan Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="JPN",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.jp.short",
+                name_ko="일본 단기금리",
+                name_en="Japan Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="JPN",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketCn:
+    """Curated indicators under ``world.rate.market.cn``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.cn.long",
+                name_ko="중국 장기금리",
+                name_en="China Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="CHN",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.cn.short",
+                name_ko="중국 단기금리",
+                name_en="China Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="CHN",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketUk:
+    """Curated indicators under ``world.rate.market.uk``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.uk.long",
+                name_ko="영국 장기금리",
+                name_en="UK Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="GBR",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.uk.short",
+                name_ko="영국 단기금리",
+                name_en="UK Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="GBR",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketKr:
+    """Curated indicators under ``world.rate.market.kr``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.kr.long",
+                name_ko="한국 장기금리",
+                name_en="Korea Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="KOR",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.kr.short",
+                name_ko="한국 단기금리",
+                name_en="Korea Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="KOR",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarket:
+    """Curated indicators under ``world.rate.market``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.us = _WorldRateMarketUs(client)
+        self.jp = _WorldRateMarketJp(client)
+        self.cn = _WorldRateMarketCn(client)
+        self.uk = _WorldRateMarketUk(client)
+        self.kr = _WorldRateMarketKr(client)
+
+
+class _WorldRate:
+    """Curated indicators under ``world.rate``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.policy = _WorldRatePolicy(client)
+        self.market = _WorldRateMarket(client)
+
+
+class _World:
+    """Curated indicators under ``world``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.rate = _WorldRate(client)
+
+
 class _CurationGroups:
     """Curated indicators, grouped, reached as ``ecos.<group>.<indicator>``.
 
@@ -1935,3 +2205,7 @@ class _CurationGroups:
     @cached_property
     def commodity(self) -> _Commodity:
         return _Commodity(self._series_client)
+
+    @cached_property
+    def world(self) -> _World:
+        return _World(self._series_client)

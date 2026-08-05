@@ -11,9 +11,10 @@
 
 기준금리와 시장금리, 환율, 통화량과 예금·대출, 코스피·코스닥, 소비자·생산자 물가,
 GDP와 성장률, 생산·소비·투자, 기업경기와 소비심리, 고용과 임금, 인구와 가계,
-국제수지·외환보유액·대외채권채무, 수출입 물가·물량, 주택·토지 가격까지 다룹니다.
+국제수지·외환보유액·대외채권채무, 수출입 물가·물량, 주택·토지 가격,
+주요국(미·일·중·유로·영·한) 정책금리와 시장금리까지 다룹니다.
 
-자주 쓰는 지표 125개는 `ecos.rate.base`처럼 **이름으로** 바로 꺼내고, 그 밖의 통계는
+자주 쓰는 지표 141개는 `ecos.rate.base`처럼 **이름으로** 바로 꺼내고, 그 밖의 통계는
 통계표 코드로 조회합니다.
 
 ## 1. 설치
@@ -62,9 +63,9 @@ import pandas as pd
 pd.DataFrame(rows)   # 또는 polars.DataFrame(rows)
 ```
 
-## 3. 이름으로 가져오는 지표 125개
+## 3. 이름으로 가져오는 지표 141개
 
-통계표 코드를 외우지 않고, 자주 쓰는 지표 125개를 `ecos.그룹.지표` 형태로 바로 꺼냅니다.
+통계표 코드를 외우지 않고, 자주 쓰는 지표 141개를 `ecos.그룹.지표` 형태로 바로 꺼냅니다.
 편집기에서 `ecos.` 뒤를 점(`.`)으로 타고 들어가면 자동완성으로 찾을 수 있고, 어느 지표든
 두 가지를 제공합니다.
 
@@ -240,9 +241,34 @@ ecos
 │   ├── house_sales_price                 # 주택매매가격지수
 │   ├── house_jeonse_price                # 주택전세가격지수
 │   └── land_price_change                 # 지가변동률(전기대비)
-└── commodity/
-    ├── dubai_oil                         # Dubai유(현물)
-    └── gold                              # 금
+├── commodity/
+│   ├── dubai_oil                         # Dubai유(현물)
+│   └── gold                              # 금
+└── world/
+    └── rate/
+        ├── policy/
+        │   ├── us                        # 미국 정책금리
+        │   ├── jp                        # 일본 정책금리
+        │   ├── cn                        # 중국 정책금리
+        │   ├── euro                      # 유로 지역 정책금리
+        │   ├── uk                        # 영국 정책금리
+        │   └── kr                        # 한국 정책금리
+        └── market/                       # 유로 지역은 시장금리 단일계열이 ECOS에 없어 제외
+            ├── us/
+            │   ├── long                  # 미국 장기금리
+            │   └── short                 # 미국 단기금리
+            ├── jp/
+            │   ├── long                  # 일본 장기금리
+            │   └── short                 # 일본 단기금리
+            ├── cn/
+            │   ├── long                  # 중국 장기금리
+            │   └── short                 # 중국 단기금리
+            ├── uk/
+            │   ├── long                  # 영국 장기금리
+            │   └── short                 # 영국 단기금리
+            └── kr/
+                ├── long                  # 한국 장기금리
+                └── short                 # 한국 단기금리
 ```
 
 전체 목록:
@@ -374,10 +400,26 @@ ecos
 | real_estate | `ecos.real_estate.land_price_change` | 지가변동률(전기대비) |
 | commodity | `ecos.commodity.dubai_oil` | Dubai유(현물) |
 | commodity | `ecos.commodity.gold` | 금 |
+| world | `ecos.world.rate.market.cn.long` | 중국 장기금리 |
+| world | `ecos.world.rate.market.cn.short` | 중국 단기금리 |
+| world | `ecos.world.rate.market.jp.long` | 일본 장기금리 |
+| world | `ecos.world.rate.market.jp.short` | 일본 단기금리 |
+| world | `ecos.world.rate.market.kr.long` | 한국 장기금리 |
+| world | `ecos.world.rate.market.kr.short` | 한국 단기금리 |
+| world | `ecos.world.rate.market.uk.long` | 영국 장기금리 |
+| world | `ecos.world.rate.market.uk.short` | 영국 단기금리 |
+| world | `ecos.world.rate.market.us.long` | 미국 장기금리 |
+| world | `ecos.world.rate.market.us.short` | 미국 단기금리 |
+| world | `ecos.world.rate.policy.cn` | 중국 정책금리 |
+| world | `ecos.world.rate.policy.euro` | 유로 지역 정책금리 |
+| world | `ecos.world.rate.policy.jp` | 일본 정책금리 |
+| world | `ecos.world.rate.policy.kr` | 한국 정책금리 |
+| world | `ecos.world.rate.policy.uk` | 영국 정책금리 |
+| world | `ecos.world.rate.policy.us` | 미국 정책금리 |
 
 ## 4. 그 밖의 모든 통계
 
-위 125개에 없는 통계는 통계표 코드로 직접 조회합니다. ECOS가 제공하는 6가지 조회를 그대로
+위 141개에 없는 통계는 통계표 코드로 직접 조회합니다. ECOS가 제공하는 6가지 조회를 그대로
 쓰며, 모두 `dict`의 목록을 돌려줍니다.
 
 | 불러오기 | 하는 일 |
@@ -490,7 +532,7 @@ ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series
 
 ## 9. 오프라인 지표 검색
 
-125개에 없는 통계표의 코드를 찾을 때 — API 키도 인터넷도 없이, 패키지에 들어 있는 통계표
+141개에 없는 통계표의 코드를 찾을 때 — API 키도 인터넷도 없이, 패키지에 들어 있는 통계표
 목록에서 바로 검색합니다.
 
 ```python
