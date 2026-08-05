@@ -140,3 +140,11 @@ GDP대비 비율	Ratio of GDP	growth	growth.trade_to_gni_ratio	수출입의 대 
 주요국 금리	Global Rates	world	world.rate.market.uk.short	영국 단기금리	UK Short-term Rate	902Y023	IR3TIB	GBR		M
 주요국 금리	Global Rates	world	world.rate.market.kr.long	한국 장기금리	Korea Long-term Rate	902Y023	IRLT	KOR		M
 주요국 금리	Global Rates	world	world.rate.market.kr.short	한국 단기금리	Korea Short-term Rate	902Y023	IR3TIB	KOR		M
+주요국 금리	Global Rates	world	world.rate.policy.ca	캐나다 정책금리	Canada Policy Rate	902Y006	CA			M
+주요국 금리	Global Rates	world	world.rate.policy.india	인도 정책금리	India Policy Rate	902Y006	IN			M
+주요국 금리	Global Rates	world	world.rate.market.ca.long	캐나다 장기금리	Canada Long-term Rate	902Y023	IRLT	CAN		M
+주요국 금리	Global Rates	world	world.rate.market.ca.short	캐나다 단기금리	Canada Short-term Rate	902Y023	IR3TIB	CAN		M
+주요국 금리	Global Rates	world	world.rate.market.india.long	인도 장기금리	India Long-term Rate	902Y023	IRLT	IND		M
+주요국 금리	Global Rates	world	world.rate.market.india.short	인도 단기금리	India Short-term Rate	902Y023	IR3TIB	IND		M
+주요국 금리	Global Rates	world	world.rate.market.de.long	독일 장기금리	Germany Long-term Rate	902Y023	IRLT	DEU		M
+주요국 금리	Global Rates	world	world.rate.market.de.short	독일 단기금리	Germany Short-term Rate	902Y023	IR3TIB	DEU		M

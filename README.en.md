@@ -15,9 +15,9 @@ the KOSPI and KOSDAQ, consumer and producer prices, GDP and growth, production /
 consumption / investment, business and consumer sentiment, employment and wages,
 population and households, the balance of payments, reserves and external debt, export /
 import prices and volumes, housing / land prices, and the policy and market rates of
-major economies (US, Japan, China, euro area, UK, and Korea).
+major economies (US, Japan, China, euro area, UK, Korea, Canada, India, and more).
 
-The 141 most-used indicators are reached **by name** (like `ecos.rate.base`); everything
+The 149 most-used indicators are reached **by name** (like `ecos.rate.base`); everything
 else is fetched by its statistic-table code.
 
 ## 1. Install
@@ -67,9 +67,9 @@ import pandas as pd
 pd.DataFrame(rows)   # or polars.DataFrame(rows)
 ```
 
-## 3. 141 indicators by name
+## 3. 149 indicators by name
 
-Instead of memorizing table codes, reach the 141 most-used indicators as `ecos.group.indicator`.
+Instead of memorizing table codes, reach the 149 most-used indicators as `ecos.group.indicator`.
 Type `ecos.` and follow the dots with editor autocomplete. Every indicator offers two calls.
 
 - `.fetch(start, end)` — the whole series over a period
@@ -255,8 +255,10 @@ ecos
         │   ├── cn                        # China Policy Rate
         │   ├── euro                      # Euro Area Policy Rate
         │   ├── uk                        # UK Policy Rate
-        │   └── kr                        # Korea Policy Rate
-        └── market/                       # no euro-area market series in ECOS, so it is omitted
+        │   ├── kr                        # Korea Policy Rate
+        │   ├── ca                        # Canada Policy Rate
+        │   └── india                     # India Policy Rate
+        └── market/                       # no euro-area market series in ECOS; Germany (de) proxies it
             ├── us/
             │   ├── long                  # US Long-term Rate
             │   └── short                 # US Short-term Rate
@@ -269,9 +271,18 @@ ecos
             ├── uk/
             │   ├── long                  # UK Long-term Rate
             │   └── short                 # UK Short-term Rate
-            └── kr/
-                ├── long                  # Korea Long-term Rate
-                └── short                 # Korea Short-term Rate
+            ├── kr/
+            │   ├── long                  # Korea Long-term Rate
+            │   └── short                 # Korea Short-term Rate
+            ├── ca/
+            │   ├── long                  # Canada Long-term Rate
+            │   └── short                 # Canada Short-term Rate
+            ├── india/
+            │   ├── long                  # India Long-term Rate
+            │   └── short                 # India Short-term Rate
+            └── de/
+                ├── long                  # Germany Long-term Rate
+                └── short                 # Germany Short-term Rate
 ```
 
 The full list:
@@ -403,8 +414,14 @@ The full list:
 | real_estate | `ecos.real_estate.land_price_change` | Land Price Change Rates |
 | commodity | `ecos.commodity.dubai_oil` | Dubai Crude Oil |
 | commodity | `ecos.commodity.gold` | Gold Price(Spot) |
+| world | `ecos.world.rate.market.ca.long` | Canada Long-term Rate |
+| world | `ecos.world.rate.market.ca.short` | Canada Short-term Rate |
 | world | `ecos.world.rate.market.cn.long` | China Long-term Rate |
 | world | `ecos.world.rate.market.cn.short` | China Short-term Rate |
+| world | `ecos.world.rate.market.de.long` | Germany Long-term Rate |
+| world | `ecos.world.rate.market.de.short` | Germany Short-term Rate |
+| world | `ecos.world.rate.market.india.long` | India Long-term Rate |
+| world | `ecos.world.rate.market.india.short` | India Short-term Rate |
 | world | `ecos.world.rate.market.jp.long` | Japan Long-term Rate |
 | world | `ecos.world.rate.market.jp.short` | Japan Short-term Rate |
 | world | `ecos.world.rate.market.kr.long` | Korea Long-term Rate |
@@ -413,8 +430,10 @@ The full list:
 | world | `ecos.world.rate.market.uk.short` | UK Short-term Rate |
 | world | `ecos.world.rate.market.us.long` | US Long-term Rate |
 | world | `ecos.world.rate.market.us.short` | US Short-term Rate |
+| world | `ecos.world.rate.policy.ca` | Canada Policy Rate |
 | world | `ecos.world.rate.policy.cn` | China Policy Rate |
 | world | `ecos.world.rate.policy.euro` | Euro Area Policy Rate |
+| world | `ecos.world.rate.policy.india` | India Policy Rate |
 | world | `ecos.world.rate.policy.jp` | Japan Policy Rate |
 | world | `ecos.world.rate.policy.kr` | Korea Policy Rate |
 | world | `ecos.world.rate.policy.uk` | UK Policy Rate |
@@ -422,7 +441,7 @@ The full list:
 
 ## 4. Everything else
 
-Statistics outside the 141 are fetched by table code. pyecos exposes ECOS's six queries
+Statistics outside the 149 are fetched by table code. pyecos exposes ECOS's six queries
 as-is; each returns a `list` of `dict`.
 
 | Call | What it does |
@@ -536,7 +555,7 @@ an empty list. For heavy use, `ECOS(delay_seconds=0.6)` paces requests under the
 
 ## 9. Offline indicator search
 
-To find the code of a table outside the 141 — with no API key and no network, searched
+To find the code of a table outside the 149 — with no API key and no network, searched
 straight from a table snapshot bundled with the package.
 
 ```python

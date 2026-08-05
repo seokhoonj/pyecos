@@ -1925,6 +1925,32 @@ class _WorldRatePolicy:
                 item_code3=None,
             ),
         )
+        self.ca = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.ca",
+                name_ko="캐나다 정책금리",
+                name_en="Canada Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="CA",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
+        self.india = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.policy.india",
+                name_ko="인도 정책금리",
+                name_en="India Policy Rate",
+                stat_code="902Y006",
+                cycle=Cycle.MONTHLY,
+                item_code1="IN",
+                item_code2=None,
+                item_code3=None,
+            ),
+        )
 
 
 class _WorldRateMarketUs:
@@ -2087,6 +2113,102 @@ class _WorldRateMarketKr:
         )
 
 
+class _WorldRateMarketCa:
+    """Curated indicators under ``world.rate.market.ca``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.ca.long",
+                name_ko="캐나다 장기금리",
+                name_en="Canada Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="CAN",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.ca.short",
+                name_ko="캐나다 단기금리",
+                name_en="Canada Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="CAN",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketIndia:
+    """Curated indicators under ``world.rate.market.india``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.india.long",
+                name_ko="인도 장기금리",
+                name_en="India Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="IND",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.india.short",
+                name_ko="인도 단기금리",
+                name_en="India Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="IND",
+                item_code3=None,
+            ),
+        )
+
+
+class _WorldRateMarketDe:
+    """Curated indicators under ``world.rate.market.de``."""
+
+    def __init__(self, client: _SeriesClient) -> None:
+        self.long = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.de.long",
+                name_ko="독일 장기금리",
+                name_en="Germany Long-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IRLT",
+                item_code2="DEU",
+                item_code3=None,
+            ),
+        )
+        self.short = Indicator(
+            client,
+            IndicatorSpec(
+                path="world.rate.market.de.short",
+                name_ko="독일 단기금리",
+                name_en="Germany Short-term Rate",
+                stat_code="902Y023",
+                cycle=Cycle.MONTHLY,
+                item_code1="IR3TIB",
+                item_code2="DEU",
+                item_code3=None,
+            ),
+        )
+
+
 class _WorldRateMarket:
     """Curated indicators under ``world.rate.market``."""
 
@@ -2096,6 +2218,9 @@ class _WorldRateMarket:
         self.cn = _WorldRateMarketCn(client)
         self.uk = _WorldRateMarketUk(client)
         self.kr = _WorldRateMarketKr(client)
+        self.ca = _WorldRateMarketCa(client)
+        self.india = _WorldRateMarketIndia(client)
+        self.de = _WorldRateMarketDe(client)
 
 
 class _WorldRate:

@@ -106,19 +106,31 @@ def test_three_dimensional_indicator_carries_all_item_codes():
     assert codes == ("C", "A", "6091")
 
 
-def test_world_policy_rate_carries_the_country_item_code():
+@pytest.mark.parametrize(
+    ("country", "iso2"),
+    [
+        ("us", "US"), ("jp", "JP"), ("cn", "CN"), ("euro", "XM"), ("uk", "GB"),
+        ("kr", "KR"), ("ca", "CA"), ("india", "IN"),
+    ],
+)
+def test_world_policy_rate_carries_the_country_item_code(country: str, iso2: str):
     # 902Y006 is one-dimensional: item_code1 is the country (ISO-2), nothing else.
+    # `india` (not `in`, a Python keyword) and `euro` (XM, not the EU) are the two
+    # segments that deviate from the plain ISO-2, so both are asserted.
     ecos = _recording_client([])
-    ind = ecos.world.rate.policy.us
+    ind = getattr(ecos.world.rate.policy, country)
     assert ind.spec.stat_code == "902Y006"
-    assert ind.spec.item_code1 == "US"
+    assert ind.spec.item_code1 == iso2
     assert ind.spec.item_code2 is None
     assert ind.spec.cycle is Cycle.MONTHLY
 
 
 @pytest.mark.parametrize(
     ("country", "iso3"),
-    [("us", "USA"), ("jp", "JPN"), ("cn", "CHN"), ("uk", "GBR"), ("kr", "KOR")],
+    [
+        ("us", "USA"), ("jp", "JPN"), ("cn", "CHN"), ("uk", "GBR"), ("kr", "KOR"),
+        ("ca", "CAN"), ("india", "IND"), ("de", "DEU"),
+    ],
 )
 def test_world_market_rate_carries_maturity_then_country(country: str, iso3: str):
     # 902Y023 is two-dimensional: item_code1 is the maturity (IRLT long / IR3TIB
@@ -140,7 +152,9 @@ def test_world_market_rate_omits_euro_area_without_an_ecos_series():
     # asymmetry so a future stray addition is caught.
     ecos = _recording_client([])
     assert not hasattr(ecos.world.rate.market, "euro")
-    assert set(vars(ecos.world.rate.market)) == {"us", "jp", "cn", "uk", "kr"}
+    assert set(vars(ecos.world.rate.market)) == {
+        "us", "jp", "cn", "uk", "kr", "ca", "india", "de"
+    }
 
 
 def test_every_group_hangs_off_the_client():
@@ -168,7 +182,7 @@ def _walk_all(ecos: ECOS) -> list[Indicator]:
 
 def test_curation_covers_every_worksheet_indicator():
     ecos = _recording_client([])
-    assert len(_walk_all(ecos)) == 141
+    assert len(_walk_all(ecos)) == 149
 
 
 # -- fetch behavior -------------------------------------------------------
