@@ -79,6 +79,7 @@ ecos.trade.exports.semiconductor.value.fetch()      # 반도체 수출금액지�
 ecos.price.producer.dram.fetch()                    # DRAM 생산자물가
 ecos.price.producer.nand.fetch()                    # NAND플래시 생산자물가
 ecos.stock.kospi.per.fetch()                        # 코스피 PER
+ecos.world.rate.policy.us.latest()                  # 미국 정책금리 최근값
 ```
 
 아래 트리에서 **끝에 `/`가 붙은 줄은 묶음**(예: `rate/`, `stock/`)일 뿐이고, **`/`가 없는

@@ -82,6 +82,7 @@ ecos.trade.exports.semiconductor.value.fetch()      # semiconductor export value
 ecos.price.producer.dram.fetch()                    # DRAM producer price
 ecos.price.producer.nand.fetch()                    # NAND flash producer price
 ecos.stock.kospi.per.fetch()                        # KOSPI P/E
+ecos.world.rate.policy.us.latest()                  # US policy rate, latest
 ```
 
 In the tree below, **a line ending in `/` is just a grouping** (e.g. `rate/`, `stock/`);
