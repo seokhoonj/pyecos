@@ -17,7 +17,7 @@ population and households, the balance of payments, reserves and external debt, 
 import prices and volumes, housing / land prices, and the policy and market rates of
 major economies (US, Japan, China, euro area, UK, Korea, Canada, India, and more).
 
-The 149 most-used indicators are reached **by name** (like `ecos.rate.base`); everything
+Frequently-used indicators are reached **by name** (like `ecos.rate.base`); everything
 else is fetched by its statistic-table code.
 
 ## 1. Install
@@ -67,9 +67,9 @@ import pandas as pd
 pd.DataFrame(rows)   # or polars.DataFrame(rows)
 ```
 
-## 3. 149 indicators by name
+## 3. Curated indicators (149)
 
-Instead of memorizing table codes, reach the 149 most-used indicators as `ecos.group.indicator`.
+Instead of memorizing table codes, reach the frequently-used indicators as `ecos.group.indicator`.
 Type `ecos.` and follow the dots with editor autocomplete. Every indicator offers two calls.
 
 - `.fetch(start, end)` — the whole series over a period
@@ -442,7 +442,7 @@ The full list:
 
 ## 4. Everything else
 
-Statistics outside the 149 are fetched by table code. pyecos exposes ECOS's six queries
+Statistics outside this set are fetched by table code. pyecos exposes ECOS's six queries
 as-is; each returns a `list` of `dict`.
 
 | Call | What it does |
@@ -556,7 +556,7 @@ an empty list. For heavy use, `ECOS(delay_seconds=0.6)` paces requests under the
 
 ## 9. Offline indicator search
 
-To find the code of a table outside the 149 — with no API key and no network, searched
+To find the code of a table outside this set — with no API key and no network, searched
 straight from a table snapshot bundled with the package.
 
 ```python
