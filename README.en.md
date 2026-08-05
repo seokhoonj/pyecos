@@ -26,8 +26,8 @@ everything else is fetched by its statistic-table code.
 pip install pyecos
 ```
 
-pyecos needs an ECOS API key. Get one free at <https://ecos.bok.or.kr/api/>. There are two
-ways to supply it.
+pyecos needs an ECOS API key. Get one free at <https://ecos.bok.or.kr/api/>. Supply the key
+as follows.
 
 **Option 1 — pass it in code** (to try it once)
 
