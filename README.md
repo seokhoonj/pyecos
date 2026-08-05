@@ -519,8 +519,11 @@ codex plugin add ecos@pyecos
 없이 `/series`처럼 부르면 됩니다:
 
 ```sh
-ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series
+ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series   # Claude Code → /series
+ln -s "$PWD/plugins/ecos/skills/series" ~/.codex/skills/series    # Codex → $ecos:series
 ```
+
+Claude Code는 바로 인식하고, Codex는 재시작해야 로딩됩니다.
 
 ## 7. 조회 주기
 

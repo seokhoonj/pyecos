@@ -522,8 +522,11 @@ Prefer not to install the plugin? Symlink a skill into your skills directory and
 without the `ecos:` prefix, as `/series`:
 
 ```sh
-ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series
+ln -s "$PWD/plugins/ecos/skills/series" ~/.claude/skills/series   # Claude Code -> /series
+ln -s "$PWD/plugins/ecos/skills/series" ~/.codex/skills/series    # Codex -> $ecos:series
 ```
+
+Claude Code picks it up immediately; Codex needs a restart to load it.
 
 ## 7. Cycles
 
