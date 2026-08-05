@@ -63,9 +63,13 @@ rows = ecos.rate.base.fetch(start="202001", end="202412")  # base rate, monthly 
 Returns are a `list` of `dict`, so a table (DataFrame) is one line away (pandas optional).
 
 ```python
+# pandas
 import pandas as pd
+pd.DataFrame(rows)
 
-pd.DataFrame(rows)   # or polars.DataFrame(rows)
+# polars
+import polars as pl
+pl.DataFrame(rows)
 ```
 
 ## 3. Curated indicators (149)

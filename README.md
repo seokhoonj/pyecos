@@ -59,9 +59,13 @@ rows = ecos.rate.base.fetch(start="202001", end="202412")  # 기준금리, 2020~
 결과는 `dict`의 목록(`list`)이라, 표(DataFrame)로 한 줄에 바뀝니다. (pandas는 필수가 아닙니다.)
 
 ```python
+# pandas
 import pandas as pd
+pd.DataFrame(rows)
 
-pd.DataFrame(rows)   # 또는 polars.DataFrame(rows)
+# polars
+import polars as pl
+pl.DataFrame(rows)
 ```
 
 ## 3. 큐레이션 지표 (149개)
