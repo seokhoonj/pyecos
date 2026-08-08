@@ -502,6 +502,8 @@ API 키를 설정하세요.
 
 ### 6.1. Claude Code
 
+Claude Code 채팅창에서 마켓플레이스를 추가하고 설치합니다:
+
 ```
 /plugin marketplace add seokhoonj/pyecos
 /plugin install ecos@pyecos
@@ -511,6 +513,8 @@ API 키를 설정하세요.
 스킬을 직접 호출하세요 — `/ecos:series 722Y001 --item 0101000`, `/ecos:key-statistics`.
 
 ### 6.2. Codex
+
+터미널에서 마켓플레이스를 추가하고 설치합니다:
 
 ```
 codex plugin marketplace add seokhoonj/pyecos
@@ -576,6 +580,6 @@ catalog.tables()           # 전체 목록 (834개)
 통계표 이름이 한국어라 한글 키워드나 코드로 찾습니다. 최신 목록이나 세부 항목이 필요하면
 `ecos.fetch_tables()`·`ecos.fetch_items()`를 쓰세요.
 
-## 라이선스
+## 10. 라이선스
 
 [MIT](LICENSE)

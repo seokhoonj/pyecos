@@ -505,6 +505,8 @@ package and set an API key first (above).
 
 ### 6.1. Claude Code
 
+In the Claude Code chat, add the marketplace and install:
+
 ```
 /plugin marketplace add seokhoonj/pyecos
 /plugin install ecos@pyecos
@@ -514,6 +516,8 @@ Then just ask ("show the base-rate series", "find the table code for the CPI"), 
 skill directly — `/ecos:series 722Y001 --item 0101000`, `/ecos:key-statistics`.
 
 ### 6.2. Codex
+
+In your terminal, add the marketplace and install:
 
 ```
 codex plugin marketplace add seokhoonj/pyecos
@@ -580,6 +584,6 @@ catalog.tables()           # the whole snapshot (834 tables)
 Table names are Korean, so search by a Korean keyword or a code. For the live list or a
 table's detail items, use `ecos.fetch_tables()` / `ecos.fetch_items()`.
 
-## License
+## 10. License
 
 [MIT](LICENSE)
