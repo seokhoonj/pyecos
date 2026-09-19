@@ -122,10 +122,15 @@ class _Transport:
                     ECOSNetworkError(f"request to ECOS failed: {type(err).__name__}"),
                     True,
                 )
-            except json.JSONDecodeError as err:
-                # A 200 whose body is not JSON (a proxy/maintenance HTML page) must
-                # surface through the ECOSError hierarchy, not a raw decode error. The
-                # page can echo the requested URL, so redact the key from its text.
+            except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as err:
+                # A 200 whose body is not JSON, not UTF-8, or nested too deep (a
+                # proxy/maintenance page, invalid bytes, or a hostile payload) must
+                # surface through the ECOSError hierarchy, not a raw error. httpx's
+                # .json() does json.loads(bytes), which raises UnicodeDecodeError --
+                # NOT a JSONDecodeError -- on a non-UTF-8 body, and RecursionError on
+                # a deeply nested one. The page can echo the requested URL, so redact
+                # the key; the error is not chained (its .object/args hold the body,
+                # which can echo the key).
                 failure = ECOSResponseError(
                     "UNKNOWN",
                     f"non-JSON response from ECOS: {_redact_key(str(err), api_key)}",

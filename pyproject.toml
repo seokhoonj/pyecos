@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyecos"
-version = "0.3.0"
+version = "0.3.1"
 description = "Python client for the Bank of Korea ECOS (Economic Statistics System) Open API"
 readme = "README.md"
 requires-python = ">=3.11"

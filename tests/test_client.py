@@ -469,6 +469,46 @@ def test_non_json_200_body_raises_response_error():
     assert caught.value.code == "UNKNOWN"
 
 
+def test_invalid_utf8_200_body_raises_response_error_without_leaking():
+    # httpx's .json() does json.loads(bytes); a non-UTF-8 body raises a
+    # UnicodeDecodeError, NOT a JSONDecodeError. It must still surface as an
+    # ECOSError (not a raw decode error), and -- since the body can echo the
+    # key-bearing URL -- must not leak the key.
+    import urllib.parse
+
+    quoted = urllib.parse.quote(_LEAK_KEY, safe="")
+    # an invalid-UTF-8 tail (\xff) makes .json() raise UnicodeDecodeError
+    body = b'{"RESULT":{"MESSAGE":"bad ' + quoted.encode() + b' \xff"}}'
+    ecos = ECOS(
+        _LEAK_KEY,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, content=body)
+        ),
+    )
+    with pytest.raises(ECOSResponseError) as caught:
+        ecos.fetch_series("X")
+    assert caught.value.code == "UNKNOWN"
+    assert caught.value.__context__ is None  # the decode error must not ride the chain
+    _assert_key_absent_from_chain(caught.value)
+
+
+def test_deeply_nested_200_body_raises_response_error_not_recursion_error():
+    # json.loads (which httpx's .json() calls) raises a raw RecursionError on a body
+    # nested past the interpreter limit; a hostile payload must surface through the
+    # ECOSError hierarchy, not crash the caller with a stdlib RecursionError.
+    body = b"[" * 100_000
+    ecos = ECOS(
+        "TESTKEY",
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, content=body)
+        ),
+    )
+    with pytest.raises(ECOSResponseError) as caught:
+        ecos.fetch_series("X")
+    assert caught.value.code == "UNKNOWN"
+    assert caught.value.__context__ is None
+
+
 def test_garbage_total_count_keeps_paging_and_does_not_truncate():
     # A non-integer total must not truncate a multi-page series; keep paging until
     # an empty batch. The old bug returned only the first page.
