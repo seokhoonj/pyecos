@@ -1,106 +1,238 @@
-"""API-key resolution across the caller, the environment, and the config file."""
+"""API-key resolution across the caller, the environment, and the config file; the
+request-URL character guard applied to whatever is found; and the secret-safety
+invariant that the key never rides along in an error message or its cause chain."""
 
 from __future__ import annotations
 
-from pathlib import Path
+import json
+import os
 
 import pytest
 
-from pyecos._config import credentials_path, resolve_api_key
+from pyecos._config import resolve_api_key
 from pyecos.exceptions import ECOSConfigError
 
+VALID_API_KEY = "ecos-api-key-0123456789abcdef"  # a well-formed ECOS key (ASCII)
 
-@pytest.fixture(autouse=True)
-def _isolated_config(monkeypatch, tmp_path):
-    """Point key resolution at an empty temp config home and clear the env var, so a
-    real ~/.config/pyecos or a set ECOS_API_KEY on the dev machine cannot leak in."""
-    monkeypatch.delenv("ECOS_API_KEY", raising=False)
+
+def _point_config_at(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    monkeypatch.delenv("ECOS_API_KEY", raising=False)
+    return tmp_path / "pyecos" / "credentials.json"
 
 
-def _write_credentials(contents: str) -> Path:
-    path = credentials_path()
+def _write_credentials_file(path, contents):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(contents, encoding="utf-8")
-    return path
 
 
-def test_explicit_key_wins_over_everything(monkeypatch):
+def _assert_secret_safe(error, secret):
+    seen = set()
+    pending = [error]
+    while pending:
+        current = pending.pop()
+        if current is None or id(current) in seen:
+            continue
+        seen.add(id(current))
+        assert secret not in str(current)
+        assert secret not in repr(current)
+        pending.extend([current.__cause__, current.__context__])
+
+
+def test_explicit_key_wins_over_everything(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": "FROMFILE"}))
     monkeypatch.setenv("ECOS_API_KEY", "FROMENV")
-    _write_credentials('{"ECOS_API_KEY": "FROMFILE"}')
-
     assert resolve_api_key("EXPLICIT") == "EXPLICIT"
 
 
-def test_environment_used_when_no_explicit_key(monkeypatch):
+def test_environment_used_when_no_explicit_key(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": "FROMFILE"}))
     monkeypatch.setenv("ECOS_API_KEY", "FROMENV")
-    _write_credentials('{"ECOS_API_KEY": "FROMFILE"}')
-
     assert resolve_api_key(None) == "FROMENV"
 
 
-def test_file_used_when_no_explicit_or_environment_key():
-    _write_credentials('{"ECOS_API_KEY": "FROMFILE"}')
-
+def test_file_used_when_no_explicit_or_environment_key(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": "FROMFILE"}))
     assert resolve_api_key(None) == "FROMFILE"
 
 
-def test_no_key_anywhere_raises_config_error_naming_the_path():
-    with pytest.raises(ECOSConfigError) as caught:
+def test_no_key_anywhere_raises_config_error_naming_the_store(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)  # no file written
+    with pytest.raises(ECOSConfigError, match="no ECOS API key") as caught:
         resolve_api_key(None)
-
-    assert str(credentials_path()) in str(caught.value)
-
-
-def test_absent_file_is_not_an_error_it_just_means_no_key():
-    # No file written; with no env either this is the "nothing anywhere" case.
-    with pytest.raises(ECOSConfigError):
-        resolve_api_key(None)
+    # The message points at the real store (store_location(), redirect-aware);
+    # that is the flat credentials path.
+    assert str(path) in str(caught.value)
 
 
-def test_malformed_json_file_raises_config_error():
-    _write_credentials("{not json")
-
-    with pytest.raises(ECOSConfigError, match="valid JSON"):
-        resolve_api_key(None)
-
-
-def test_non_object_json_file_raises_config_error():
-    _write_credentials('["not", "an", "object"]')
-
-    with pytest.raises(ECOSConfigError, match="JSON object"):
-        resolve_api_key(None)
-
-
-def test_file_present_but_key_blank_falls_through():
-    _write_credentials('{"ECOS_API_KEY": ""}')
-
-    with pytest.raises(ECOSConfigError):  # blank is treated as absent
-        resolve_api_key(None)
-
-
-def test_credentials_path_honors_xdg_config_home(monkeypatch, tmp_path):
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    assert credentials_path() == tmp_path / "pyecos" / "credentials.json"
-
-
-def test_blank_environment_key_falls_through_to_file(monkeypatch):
-    # An exported-but-empty ECOS_API_KEY is treated as absent, not as a blank key.
-    monkeypatch.setenv("ECOS_API_KEY", "")
-    _write_credentials('{"ECOS_API_KEY": "FROMFILE"}')
-
-    assert resolve_api_key(None) == "FROMFILE"
-
-
-def test_unreadable_credentials_file_raises_config_error():
-    path = credentials_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.mkdir()  # a directory where the file should be -> OSError on read
+@pytest.mark.parametrize(
+    "contents",
+    ["{not json", '["not", "an", "object"]', json.dumps({"ECOS_API_KEY": 123})],
+)
+def test_malformed_credentials_file_is_rejected(tmp_path, monkeypatch, contents):
+    # Not-JSON, a non-object, or a non-string value all reach the caller as a config
+    # error rather than a silent skip -- credbox validates the store and its fault is
+    # translated to ECOSConfigError.
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, contents)
     with pytest.raises(ECOSConfigError, match="could not read"):
         resolve_api_key(None)
 
 
-def test_non_string_key_value_is_treated_as_absent():
-    _write_credentials('{"ECOS_API_KEY": 123}')
-    with pytest.raises(ECOSConfigError):
+def test_unreadable_credentials_file_raises_config_error(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)
+    path.mkdir(parents=True)  # a directory where the file should be -> OSError on read
+    with pytest.raises(ECOSConfigError, match="could not read"):
         resolve_api_key(None)
+
+
+def test_blank_file_key_is_treated_as_absent(tmp_path, monkeypatch):
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": ""}))
+    with pytest.raises(ECOSConfigError, match="no ECOS API key"):  # blank == absent
+        resolve_api_key(None)
+
+
+@pytest.mark.parametrize("blank_source", ["explicit", "environment"])
+def test_blank_higher_tier_falls_through_to_the_file(
+    tmp_path, monkeypatch, blank_source
+):
+    # A blank explicit argument or env var is "absent" (credbox trims to empty), so
+    # resolution falls through to the file rather than returning empty.
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": VALID_API_KEY}))
+    explicit = None
+    if blank_source == "explicit":
+        explicit = "   "
+    else:
+        monkeypatch.setenv("ECOS_API_KEY", "   ")
+
+    assert resolve_api_key(explicit) == VALID_API_KEY
+
+
+@pytest.mark.parametrize("source", ["explicit", "environment", "stored"])
+def test_key_is_trimmed_at_every_tier(tmp_path, monkeypatch, source):
+    # credbox strips surrounding whitespace at every tier (a pasted trailing newline no
+    # longer breaks auth); pinned so a future change cannot silently return padding.
+    path = _point_config_at(tmp_path, monkeypatch)
+    padded = "  " + VALID_API_KEY + "  "
+    explicit = None
+    if source == "explicit":
+        explicit = padded
+    elif source == "environment":
+        monkeypatch.setenv("ECOS_API_KEY", padded)
+    else:
+        _write_credentials_file(path, json.dumps({"ECOS_API_KEY": padded}))
+
+    assert resolve_api_key(explicit) == VALID_API_KEY
+
+
+@pytest.mark.parametrize(
+    "bad_key",
+    [
+        "prefix\nSECRETTAIL",  # a control character
+        "prefix한SECRETTAIL",  # a non-ASCII character
+        "prefix\udcfeSECRETTAIL",  # a lone surrogate (corrupt environment bytes)
+    ],
+)
+def test_key_outside_printable_ascii_raises_and_never_echoes_the_key(
+    tmp_path, monkeypatch, bad_key
+):
+    # credbox trims surrounding whitespace but keeps a control character, a non-ASCII
+    # character, or a lone surrogate. ECOS url-encodes the key into a path segment, and
+    # a surrogate makes urllib.parse.quote raise a whole-key UnicodeEncodeError. Reject
+    # as config, echoing nothing -- not in the message, not anywhere in the cause chain.
+    _point_config_at(tmp_path, monkeypatch)
+    with pytest.raises(ECOSConfigError, match="printable ASCII") as exc:
+        resolve_api_key(bad_key)
+    _assert_secret_safe(exc.value, "prefix")
+    _assert_secret_safe(exc.value, "SECRETTAIL")
+
+
+@pytest.mark.skipif(not hasattr(os, "environb"), reason="bytes environment required")
+def test_surrogate_environment_key_raises_without_echoing(tmp_path, monkeypatch):
+    # The real threat: ECOS_API_KEY holds a byte that is invalid UTF-8, which os.environ
+    # decodes with surrogateescape into a lone surrogate. credbox preserves it, and the
+    # guard must reject it before urllib.parse.quote raises a whole-key error.
+    _point_config_at(tmp_path, monkeypatch)
+    monkeypatch.setitem(os.environb, b"ECOS_API_KEY", b"prefix\xfeSECRETTAIL")
+    with pytest.raises(ECOSConfigError, match="printable ASCII") as caught:
+        resolve_api_key(None)
+    _assert_secret_safe(caught.value, "prefix")
+    _assert_secret_safe(caught.value, "SECRETTAIL")
+
+
+def test_store_binding_redirects_to_a_host_namespace(tmp_path, monkeypatch):
+    # A host embedding pyecos redirects the store via PYECOS_STORE_APP +
+    # PYECOS_NAMESPACE, so pyecos's key lives in the host store under a pyecos section.
+    _point_config_at(tmp_path, monkeypatch)
+    monkeypatch.setenv("PYECOS_STORE_APP", "host")
+    monkeypatch.setenv("PYECOS_NAMESPACE", "ecos")
+    host = tmp_path / "host"
+    host.mkdir(parents=True)
+    (host / "credentials.json").write_text(
+        json.dumps({"ecos": {"ECOS_API_KEY": VALID_API_KEY}}), encoding="utf-8"
+    )
+
+    assert resolve_api_key(None) == VALID_API_KEY
+
+
+@pytest.mark.parametrize("source", ["explicit", "environment"])
+def test_higher_tier_wins_before_an_invalid_binding_is_validated(monkeypatch, source):
+    # An explicit argument or ECOS_API_KEY resolves before the binding is validated
+    # (lazy), so a bad binding never raises when a higher tier supplies the key.
+    monkeypatch.delenv("ECOS_API_KEY", raising=False)
+    monkeypatch.setenv("PYECOS_STORE_APP", "../invalid")
+    explicit = None
+    if source == "explicit":
+        explicit = VALID_API_KEY
+    else:
+        monkeypatch.setenv("ECOS_API_KEY", VALID_API_KEY)
+
+    assert resolve_api_key(explicit) == VALID_API_KEY
+
+
+def test_invalid_store_binding_raises_config_error(monkeypatch):
+    # A malformed binding surfaces as pyecos's ECOSConfigError on first store touch.
+    monkeypatch.delenv("ECOS_API_KEY", raising=False)
+    monkeypatch.setenv("PYECOS_STORE_APP", "../invalid")
+    with pytest.raises(ECOSConfigError, match="could not read"):
+        resolve_api_key(None)
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        lambda secret: secret.encode() + b"\xff",  # not valid UTF-8
+        lambda secret: (secret + "{").encode(),  # not valid JSON
+        lambda secret: json.dumps([secret]).encode(),  # a JSON array, not an object
+        lambda secret: json.dumps({"ECOS_API_KEY": [secret]}).encode(),  # non-string
+    ],
+)
+def test_malformed_store_detaches_secret_bearing_context(
+    tmp_path, monkeypatch, contents
+):
+    # Whatever the fault, the key bytes must not ride along in the error, its repr, or
+    # the cause chain -- credbox detaches secret-bearing content and `from err` keeps
+    # that, the load-bearing secret-safety invariant.
+    secret = "ecos-secret-value-abcdef"
+    path = _point_config_at(tmp_path, monkeypatch)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(contents(secret))
+    with pytest.raises(ECOSConfigError, match="could not read") as caught:
+        resolve_api_key(None)
+    _assert_secret_safe(caught.value, secret)
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits required")
+def test_loose_permission_file_warns_and_still_reads(tmp_path, monkeypatch, capsys):
+    # A group/other-readable file is warned about (chmod 600 nudge), not refused.
+    path = _point_config_at(tmp_path, monkeypatch)
+    _write_credentials_file(path, json.dumps({"ECOS_API_KEY": VALID_API_KEY}))
+    path.chmod(0o644)
+
+    assert resolve_api_key(None) == VALID_API_KEY
+    assert "chmod 600" in capsys.readouterr().err

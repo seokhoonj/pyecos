@@ -22,6 +22,7 @@ import httpx
 
 from .exceptions import (
     ECOSAuthError,
+    ECOSError,
     ECOSNetworkError,
     ECOSRateLimitError,
     ECOSResponseError,
@@ -87,35 +88,57 @@ class _Transport:
         any other vendor error. A "no data" response (INFO-200) returns as empty.
         """
         url = _build_url(service, api_key, lang, start_row, end_row, tail)
-        last_error: ECOSNetworkError | None = None
-        last_cause: Exception | None = None
+        last_error: ECOSError | None = None
         for attempt in range(self._max_attempts):
             self._wait_for_next_slot()
+            # The key rides in `url` as a path segment. Every failure error is BUILT
+            # inside the except block but RAISED after it (`from None`), so the
+            # key-bearing httpx error -- whose str()/repr() re-emit the URL and whose
+            # `.request` holds it -- is never attached as __context__ or __cause__. This
+            # is the load-bearing secret-safety invariant.
+            failure: ECOSError | None = None
+            retry = False
             try:
                 response = self._client.get(url)
                 response.raise_for_status()
                 payload = response.json()
             except httpx.HTTPStatusError as err:
+                # httpx builds str(err) from response.url, so it embeds the whole key.
+                # Build the message from the status code alone; never from str(err).
                 status = err.response.status_code
+                detail = f"ECOS returned HTTP {status}"
                 if status == 429:  # an HTTP-level rate limit, should ECOS send one
-                    raise ECOSRateLimitError(_RATE_LIMIT_CODE, str(err)) from err
-                if status < 500:  # any other 4xx is the server's answer
-                    raise ECOSNetworkError(str(err)) from err
-                last_error, last_cause = ECOSNetworkError(str(err)), err  # 5xx -- retry
+                    failure = ECOSRateLimitError(_RATE_LIMIT_CODE, detail)
+                elif status < 500:  # any other 4xx is the server's answer
+                    failure = ECOSNetworkError(detail)
+                else:  # 5xx -- retry
+                    failure, retry = ECOSNetworkError(detail), True
             except httpx.HTTPError as err:  # timeout, connection reset, ...
-                last_error, last_cause = ECOSNetworkError(str(err)), err
+                # Name the failure type only. The httpx error's str() is key-free today,
+                # but the error object carries the request (with the key-bearing URL) as
+                # `.request`, so it is not chained -- a structured logger walking the
+                # cause chain must not be able to reach the key. `retry` with no cause.
+                failure, retry = (
+                    ECOSNetworkError(f"request to ECOS failed: {type(err).__name__}"),
+                    True,
+                )
             except json.JSONDecodeError as err:
                 # A 200 whose body is not JSON (a proxy/maintenance HTML page) must
-                # surface through the ECOSError hierarchy, not as a raw decode error.
-                raise ECOSResponseError(
-                    "UNKNOWN", f"non-JSON response from ECOS: {err}") from err
+                # surface through the ECOSError hierarchy, not a raw decode error. The
+                # page can echo the requested URL, so redact the key from its text.
+                failure = ECOSResponseError(
+                    "UNKNOWN",
+                    f"non-JSON response from ECOS: {_redact_key(str(err), api_key)}",
+                )
             else:
-                return _extract_body(payload, service)
+                return _extract_body(payload, service, api_key)
+            if not retry:
+                raise failure from None  # raised outside the except: no __context__
+            last_error = failure
             if attempt + 1 < self._max_attempts:
                 time.sleep(_RETRY_BACKOFF_SECONDS * _RETRY_BACKOFF_FACTOR**attempt)
         if last_error is not None:
-            # Chain the httpx cause the ECOSNetworkError docstring promises.
-            raise last_error from last_cause
+            raise last_error from None  # raised outside the except: no __context__
         raise ECOSNetworkError("request failed")
 
     def _wait_for_next_slot(self) -> None:
@@ -148,25 +171,46 @@ def _build_url(
     return f"{BASE_URL}/{path}"
 
 
-def _extract_body(payload: Any, service: str) -> dict[str, Any]:
+def _redact_key(text: str, api_key: str) -> str:
+    """Blank the API key out of any text derived from the request URL.
+
+    ECOS carries the key as a URL path segment, and httpx's ``HTTPStatusError`` message
+    is built from ``response.url``, so an error string can embed the key -- in its raw
+    form and, since the URL is url-encoded, in its ``quote``d form. Replace both.
+    """
+    return text.replace(api_key, "<key>").replace(quote(api_key, safe=""), "<key>")
+
+
+def _extract_body(payload: Any, service: str, api_key: str) -> dict[str, Any]:
+    # `payload` is the server's response body; a misbehaving proxy could echo the
+    # key-bearing request URL in it, and the vendor MESSAGE is arbitrary server text, so
+    # every value derived from either is redacted before it reaches an error message.
+    def unexpected() -> ECOSResponseError:
+        return ECOSResponseError(
+            "UNKNOWN",
+            f"unexpected ECOS response: {_redact_key(repr(payload), api_key)}",
+        )
+
     if not isinstance(payload, dict):
-        raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
+        raise unexpected()
     if service in payload:
         body = payload[service]
         if not isinstance(body, dict):  # a non-object under the service key is bad
-            raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
+            raise unexpected()
         if "row" not in body and "list_total_count" not in body:
             # A dict under the service key that carries no page fields (e.g. a
             # nested RESULT error) must surface, not read as an empty series.
-            raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
+            raise unexpected()
         return body
 
     result = payload.get("RESULT")
     if not isinstance(result, dict):
-        raise ECOSResponseError("UNKNOWN", f"unexpected ECOS response: {payload!r}")
+        raise unexpected()
 
-    code = result.get("CODE", "UNKNOWN")
-    message = result.get("MESSAGE", "")
+    # CODE and MESSAGE are both server-authored, so both are redacted; str() also
+    # hardens a non-string CODE/MESSAGE value.
+    code = _redact_key(str(result.get("CODE", "UNKNOWN")), api_key)
+    message = _redact_key(str(result.get("MESSAGE", "")), api_key)
     if code == "INFO-200":  # no matching data -- an empty result, not a failure
         return {"list_total_count": "0", "row": []}
     if code == "INFO-100":  # invalid authentication key

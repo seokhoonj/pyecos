@@ -63,6 +63,8 @@ class ECOSNetworkError(ECOSError):
     """The request failed at the transport or HTTP layer.
 
     A timeout, DNS failure, connection reset, or a non-success HTTP status that ECOS
-    never turned into a RESULT body. The underlying exception is chained as
-    ``__cause__``.
+    never turned into a RESULT body. A transport error (timeout/reset) is chained as
+    ``__cause__``; a non-success HTTP status is not, because httpx builds that error's
+    message from the request URL, which carries the API key as a path segment (the
+    message is redacted before it reaches this error).
     """

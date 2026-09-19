@@ -10,6 +10,7 @@ from pyecos import (
     Cycle,
     ECOSAuthError,
     ECOSConfigError,
+    ECOSError,
     ECOSNetworkError,
     ECOSRateLimitError,
     ECOSResponseError,
@@ -64,16 +65,18 @@ def test_fetch_series_maps_vendor_keys_and_parses_value():
 
     rows = ecos.fetch_series("722Y001", start="202401", end="202401")
 
-    assert rows == [{
-        "stat_code": "722Y001",
-        "stat_name": "1.3.1. 시장금리",
-        "item_code1": "0101000",
-        "item_name1": "한국은행 기준금리",
-        "unit_name": "%",
-        "weight": "",
-        "time": "202401",
-        "data_value": 3.5,
-    }]
+    assert rows == [
+        {
+            "stat_code": "722Y001",
+            "stat_name": "1.3.1. 시장금리",
+            "item_code1": "0101000",
+            "item_name1": "한국은행 기준금리",
+            "unit_name": "%",
+            "weight": "",
+            "time": "202401",
+            "data_value": 3.5,
+        }
+    ]
 
 
 def test_blank_data_value_becomes_none():
@@ -86,8 +89,10 @@ def test_blank_data_value_becomes_none():
 
 
 def test_fetch_series_pages_past_the_hundred_row_limit():
-    first = [{"STAT_CODE": "X", "TIME": f"2024{i:02d}", "DATA_VALUE": str(i)}
-             for i in range(1, 101)]
+    first = [
+        {"STAT_CODE": "X", "TIME": f"2024{i:02d}", "DATA_VALUE": str(i)}
+        for i in range(1, 101)
+    ]
     second = [{"STAT_CODE": "X", "TIME": "202512", "DATA_VALUE": "101"}]
     paths: list[str] = []
     ecos = _client([_search_page(first, 101), _search_page(second, 101)], paths)
@@ -104,13 +109,13 @@ def test_fetch_series_builds_the_positional_path_in_order():
     paths: list[str] = []
     ecos = _client([_search_page([], 0)], paths)
 
-    ecos.fetch_series("722Y001", cycle="M", start="202001", end="202412",
-                    item_code1="0101000")
+    ecos.fetch_series(
+        "722Y001", cycle="M", start="202001", end="202412", item_code1="0101000"
+    )
 
     # service/key/format/lang/start_row/end_row/stat/cycle/start/end/item1
     assert paths[0] == (
-        "/api/StatisticSearch/TESTKEY/json/kr/1/100"
-        "/722Y001/M/202001/202412/0101000"
+        "/api/StatisticSearch/TESTKEY/json/kr/1/100/722Y001/M/202001/202412/0101000"
     )
 
 
@@ -141,6 +146,7 @@ def test_vendor_error_raises_response_error_with_code():
 
 def test_transport_failure_raises_network_error(monkeypatch):
     import pyecos._transport as transport
+
     monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)  # no real waiting
     attempts = []
 
@@ -153,6 +159,75 @@ def test_transport_failure_raises_network_error(monkeypatch):
     with pytest.raises(ECOSNetworkError):
         ecos.fetch_series("X", start="202401", end="202401")
     assert len(attempts) == 3  # a transient failure is retried up to the limit
+
+
+# A key with reserved characters, so its raw and url-encoded forms differ and a
+# redaction that misses one is caught.
+_LEAK_KEY = "raw+key/with==specials"
+
+
+def _assert_key_absent_from_chain(error: BaseException) -> None:
+    import urllib.parse
+
+    forms = [_LEAK_KEY, urllib.parse.quote(_LEAK_KEY, safe="")]
+    seen: set[int] = set()
+    pending: list[BaseException | None] = [error]
+    while pending:
+        current = pending.pop()
+        if current is None or id(current) in seen:
+            continue
+        seen.add(id(current))
+        blob = str(current) + repr(current) + repr(current.args)
+        for form in forms:
+            assert form not in blob
+        pending.extend([current.__cause__, current.__context__])
+
+
+@pytest.mark.parametrize("status", [404, 500, 429])
+def test_http_status_error_never_leaks_the_key(monkeypatch, status):
+    # ECOS carries the key as a URL path segment, and httpx's HTTPStatusError message is
+    # built from response.url, so a naive str(err) would embed the whole key. The
+    # message must be status-only and the key-bearing httpx error must not ride the
+    # chain -- no
+    # form of the key (raw or url-encoded) in str/repr/args/__cause__/__context__.
+    import pyecos._transport as transport
+
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)  # no real waiting
+    ecos = ECOS(
+        _LEAK_KEY,
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(status, request=request)
+        ),
+    )
+    with pytest.raises(ECOSError) as caught:
+        ecos.fetch_series("722Y001")
+
+    _assert_key_absent_from_chain(caught.value)
+
+
+def test_response_body_echoing_the_url_never_leaks_the_key():
+    # A misbehaving proxy can answer 200 with a JSON body that echoes the requested URL
+    # (which carries the key). Whether that body reads as an "unexpected" shape or a
+    # RESULT error, its text must be redacted before it reaches an ECOS error message.
+    import urllib.parse
+
+    quoted = urllib.parse.quote(_LEAK_KEY, safe="")
+    url = f"https://ecos.bok.or.kr/api/StatisticSearch/{quoted}/json"
+    for body in (
+        {"error": "forbidden", "requested": url},
+        {"RESULT": {"CODE": "ERROR-999", "MESSAGE": f"bad url {url}"}},
+        {"RESULT": {"CODE": "INFO-100", "MESSAGE": f"key {url} rejected"}},
+        {"RESULT": {"CODE": f"ERR {url}", "MESSAGE": "x"}},  # the CODE field, too
+    ):
+        ecos = ECOS(
+            _LEAK_KEY,
+            transport=httpx.MockTransport(
+                lambda request, b=body: httpx.Response(200, json=b)
+            ),
+        )
+        with pytest.raises(ECOSError) as caught:
+            ecos.fetch_series("722Y001")
+        _assert_key_absent_from_chain(caught.value)
 
 
 def test_rate_limit_raises_rate_limit_error():
@@ -171,8 +246,9 @@ def test_rate_limit_is_not_retried():
 
     def handle(request: httpx.Request) -> httpx.Response:
         attempts.append(1)
-        return httpx.Response(200, json={"RESULT": {"CODE": "ERROR-602",
-                                                    "MESSAGE": "x"}})
+        return httpx.Response(
+            200, json={"RESULT": {"CODE": "ERROR-602", "MESSAGE": "x"}}
+        )
 
     ecos = ECOS("TESTKEY", transport=httpx.MockTransport(handle))
 
@@ -183,13 +259,18 @@ def test_rate_limit_is_not_retried():
 
 def test_delay_seconds_paces_requests(monkeypatch):
     import pyecos._transport as transport
+
     monkeypatch.setattr(transport.time, "monotonic", lambda: 1000.0)  # frozen clock
     slept = []
     monkeypatch.setattr(transport.time, "sleep", lambda seconds: slept.append(seconds))
     first = [{"DATA_VALUE": str(i)} for i in range(100)]
-    ecos = ECOS("TESTKEY", delay_seconds=0.6,
-                transport=_handler([_search_page(first, 101),
-                                    _search_page([{"DATA_VALUE": "101"}], 101)], []))
+    ecos = ECOS(
+        "TESTKEY",
+        delay_seconds=0.6,
+        transport=_handler(
+            [_search_page(first, 101), _search_page([{"DATA_VALUE": "101"}], 101)], []
+        ),
+    )
 
     ecos.fetch_series("X")  # two pages -> the first is free, the second waits one slot
 
@@ -198,12 +279,17 @@ def test_delay_seconds_paces_requests(monkeypatch):
 
 def test_non_positive_delay_does_not_pace(monkeypatch):
     import pyecos._transport as transport
+
     slept = []
     monkeypatch.setattr(transport.time, "sleep", lambda seconds: slept.append(seconds))
     first = [{"DATA_VALUE": str(i)} for i in range(100)]
-    ecos = ECOS("TESTKEY", delay_seconds=0.0,  # the default -- no pacing
-                transport=_handler([_search_page(first, 101),
-                                    _search_page([{"DATA_VALUE": "101"}], 101)], []))
+    ecos = ECOS(
+        "TESTKEY",
+        delay_seconds=0.0,  # the default -- no pacing
+        transport=_handler(
+            [_search_page(first, 101), _search_page([{"DATA_VALUE": "101"}], 101)], []
+        ),
+    )
 
     ecos.fetch_series("X")
 
@@ -223,8 +309,7 @@ def test_cycle_accepts_both_enum_and_string():
 def test_per_call_language_overrides_the_client_default():
     paths: list[str] = []
     empty_key_stats = {"KeyStatisticList": {"list_total_count": "0", "row": []}}
-    ecos = ECOS("TESTKEY", lang="kr",
-                transport=_handler([empty_key_stats], paths))
+    ecos = ECOS("TESTKEY", lang="kr", transport=_handler([empty_key_stats], paths))
 
     ecos.fetch_key_statistics(lang="en")
 
@@ -256,19 +341,31 @@ def test_context_manager_closes_the_connection():
 
 # --- the five non-series services -------------------------------------------
 
+
 def _service_page(service: str, rows: list[dict], total: int | None = None) -> dict:
-    return {service: {"list_total_count": str(len(rows) if total is None else total),
-                      "row": rows}}
+    return {
+        service: {
+            "list_total_count": str(len(rows) if total is None else total),
+            "row": rows,
+        }
+    }
 
 
-@pytest.mark.parametrize("call, service, tail_segment", [
-    (lambda e: e.fetch_tables(), "StatisticTableList", "/1/100"),
-    (lambda e: e.fetch_tables(stat_code="722Y001"), "StatisticTableList", "/722Y001"),
-    (lambda e: e.fetch_items("722Y001"), "StatisticItemList", "/722Y001"),
-    (lambda e: e.fetch_key_statistics(), "KeyStatisticList", "/1/100"),
-    (lambda e: e.fetch_glossary("DSR"), "StatisticWord", "/DSR"),
-    (lambda e: e.fetch_meta("ESI"), "StatisticMeta", "/ESI"),
-])
+@pytest.mark.parametrize(
+    "call, service, tail_segment",
+    [
+        (lambda e: e.fetch_tables(), "StatisticTableList", "/1/100"),
+        (
+            lambda e: e.fetch_tables(stat_code="722Y001"),
+            "StatisticTableList",
+            "/722Y001",
+        ),
+        (lambda e: e.fetch_items("722Y001"), "StatisticItemList", "/722Y001"),
+        (lambda e: e.fetch_key_statistics(), "KeyStatisticList", "/1/100"),
+        (lambda e: e.fetch_glossary("DSR"), "StatisticWord", "/DSR"),
+        (lambda e: e.fetch_meta("ESI"), "StatisticMeta", "/ESI"),
+    ],
+)
 def test_each_service_targets_its_own_endpoint(call, service, tail_segment):
     paths: list[str] = []
     call(_client([_service_page(service, [])], paths))
@@ -277,8 +374,12 @@ def test_each_service_targets_its_own_endpoint(call, service, tail_segment):
 
 
 def test_tables_maps_parent_and_searchable_aliases():
-    raw = {"STAT_CODE": "102Y004", "P_STAT_CODE": "0000000620",
-           "SRCH_YN": "Y", "STAT_NAME": "본원통화"}
+    raw = {
+        "STAT_CODE": "102Y004",
+        "P_STAT_CODE": "0000000620",
+        "SRCH_YN": "Y",
+        "STAT_NAME": "본원통화",
+    }
     (row,) = _client([_service_page("StatisticTableList", [raw])]).fetch_tables()
     assert row["parent_stat_code"] == "0000000620"
     assert row["searchable"] == "Y"
@@ -303,26 +404,35 @@ def test_key_statistics_parses_data_value_to_float():
 def test_meta_maps_content_hierarchy_aliases():
     raw = {"LVL": "1", "P_CONT_CODE": "R", "CONT_CODE": "A", "CONT_NAME": "명목"}
     (row,) = _client([_service_page("StatisticMeta", [raw])]).fetch_meta("ESI")
-    assert row == {"level": "1", "parent_content_code": "R",
-                   "content_code": "A", "content_name": "명목"}
+    assert row == {
+        "level": "1",
+        "parent_content_code": "R",
+        "content_code": "A",
+        "content_name": "명목",
+    }
 
 
-@pytest.mark.parametrize("call, service", [
-    (lambda e: e.fetch_tables(lang="en"), "StatisticTableList"),
-    (lambda e: e.fetch_items("X", lang="en"), "StatisticItemList"),
-    (lambda e: e.fetch_key_statistics(lang="en"), "KeyStatisticList"),
-    (lambda e: e.fetch_glossary("X", lang="en"), "StatisticWord"),
-    (lambda e: e.fetch_meta("X", lang="en"), "StatisticMeta"),
-])
+@pytest.mark.parametrize(
+    "call, service",
+    [
+        (lambda e: e.fetch_tables(lang="en"), "StatisticTableList"),
+        (lambda e: e.fetch_items("X", lang="en"), "StatisticItemList"),
+        (lambda e: e.fetch_key_statistics(lang="en"), "KeyStatisticList"),
+        (lambda e: e.fetch_glossary("X", lang="en"), "StatisticWord"),
+        (lambda e: e.fetch_meta("X", lang="en"), "StatisticMeta"),
+    ],
+)
 def test_per_call_language_override_reaches_every_service(call, service):
     paths: list[str] = []
-    ecos = ECOS("TESTKEY", lang="kr",
-                transport=_handler([_service_page(service, [])], paths))
+    ecos = ECOS(
+        "TESTKEY", lang="kr", transport=_handler([_service_page(service, [])], paths)
+    )
     call(ecos)
     assert "/json/en/" in paths[0]
 
 
 # --- pagination and malformed-response edges --------------------------------
+
 
 def test_pagination_stops_after_two_full_pages_equal_to_total():
     first = [{"DATA_VALUE": str(i)} for i in range(100)]
@@ -365,20 +475,29 @@ def test_garbage_total_count_keeps_paging_and_does_not_truncate():
     paths: list[str] = []
     ecos = _client(
         [
-            {"StatisticSearch": {"list_total_count": "N/A",
-                                 "row": [{"DATA_VALUE": str(i)} for i in range(100)]}},
-            {"StatisticSearch": {"list_total_count": "N/A",
-                                 "row": [{"DATA_VALUE": str(i)} for i in range(50)]}},
+            {
+                "StatisticSearch": {
+                    "list_total_count": "N/A",
+                    "row": [{"DATA_VALUE": str(i)} for i in range(100)],
+                }
+            },
+            {
+                "StatisticSearch": {
+                    "list_total_count": "N/A",
+                    "row": [{"DATA_VALUE": str(i)} for i in range(50)],
+                }
+            },
             {"StatisticSearch": {"list_total_count": "N/A", "row": []}},
         ],
         paths,
     )
     rows = ecos.fetch_series("X")
-    assert len(rows) == 150       # both pages kept, not truncated to the first
-    assert len(paths) == 3        # paged past the garbage total to the empty page
+    assert len(rows) == 150  # both pages kept, not truncated to the first
+    assert len(paths) == 3  # paged past the garbage total to the empty page
 
 
 # --- opt-in TTL cache -------------------------------------------------------
+
 
 def _counting_client(*, cache_ttl: float | None = None) -> tuple[ECOS, list[int]]:
     """An ECOS whose mock transport counts requests and always answers one row."""
@@ -423,6 +542,7 @@ def test_cache_keeps_language_variants_apart():
 
 def test_cache_entry_expires_after_ttl(monkeypatch):
     import pyecos._cache as cache_mod
+
     clock = [1000.0]
     monkeypatch.setattr(cache_mod.time, "monotonic", lambda: clock[0])
     ecos, calls = _counting_client(cache_ttl=60)
@@ -444,14 +564,15 @@ def test_cached_rows_are_isolated_from_caller_mutation():
     ecos, calls = _counting_client(cache_ttl=3600)
     first = ecos.fetch_series("X")
     first.append({"tampered": "row"})  # list-level mutation
-    first[0]["data_value"] = 999.0     # dict-level mutation of a row
-    second = ecos.fetch_series("X")    # served from the cache
-    assert len(second) == 1            # the list is isolated
+    first[0]["data_value"] = 999.0  # dict-level mutation of a row
+    second = ecos.fetch_series("X")  # served from the cache
+    assert len(second) == 1  # the list is isolated
     assert second[0]["data_value"] == 1.0  # and each row dict is isolated too
 
 
 def test_cache_evicts_least_recently_used_past_maxsize():
     from pyecos._cache import _Cache
+
     cache = _Cache(ttl=3600, maxsize=2)
     cache.set(("s", "kr", ("a",)), [{"v": "1"}])
     cache.set(("s", "kr", ("b",)), [{"v": "2"}])
@@ -467,8 +588,11 @@ def test_cache_stores_the_whole_paginated_result_and_a_hit_skips_all_pages():
 
     def handle(request: httpx.Request) -> httpx.Response:
         calls.append(1)
-        page = _search_page(first, 101) if len(calls) == 1 \
+        page = (
+            _search_page(first, 101)
+            if len(calls) == 1
             else _search_page([{"DATA_VALUE": "100"}], 101)
+        )
         return httpx.Response(200, json=page)
 
     ecos = ECOS("TESTKEY", cache_ttl=3600, transport=httpx.MockTransport(handle))
@@ -481,6 +605,7 @@ def test_cache_stores_the_whole_paginated_result_and_a_hit_skips_all_pages():
 
 def test_transient_failure_is_retried_and_the_later_success_is_returned(monkeypatch):
     import pyecos._transport as transport
+
     monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)  # no real waiting
     attempts: list[int] = []
 
@@ -504,8 +629,10 @@ def test_non_positive_cache_ttl_is_rejected():
 
 
 def test_http_429_maps_to_rate_limit_error():
-    ecos = ECOS("TESTKEY", transport=httpx.MockTransport(
-        lambda request: httpx.Response(429, json={})))
+    ecos = ECOS(
+        "TESTKEY",
+        transport=httpx.MockTransport(lambda request: httpx.Response(429, json={})),
+    )
 
     with pytest.raises(ECOSRateLimitError) as caught:
         ecos.fetch_series("X")
@@ -528,6 +655,7 @@ def test_http_4xx_maps_to_network_error_without_retry():
 
 def test_http_5xx_is_retried_then_succeeds(monkeypatch):
     import pyecos._transport as transport
+
     monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)
     attempts: list[int] = []
 
@@ -544,8 +672,11 @@ def test_http_5xx_is_retried_then_succeeds(monkeypatch):
     assert len(attempts) == 2  # one 5xx, then the retry succeeded
 
 
-def test_retry_exhaustion_chains_the_underlying_cause(monkeypatch):
+def test_retry_exhaustion_names_the_failure_type_without_chaining_the_cause(
+    monkeypatch,
+):
     import pyecos._transport as transport
+
     monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)
 
     def fail(request: httpx.Request) -> httpx.Response:
@@ -555,13 +686,21 @@ def test_retry_exhaustion_chains_the_underlying_cause(monkeypatch):
 
     with pytest.raises(ECOSNetworkError) as caught:
         ecos.fetch_series("X")
-    assert isinstance(caught.value.__cause__, httpx.HTTPError)  # cause is preserved
+    # The failure type is named for debugging, but the httpx error is NOT chained: it
+    # carries the request (with the key-bearing URL) in `.request`, so keeping it in the
+    # cause chain would expose the key to a structured logger.
+    assert "ConnectTimeout" in str(caught.value)
+    assert caught.value.__cause__ is None
+    assert caught.value.__context__ is None
 
 
 def test_unknown_lang_raises_value_error():
     with pytest.raises(ValueError):
-        ECOS("TESTKEY", lang="xx",
-             transport=httpx.MockTransport(lambda r: httpx.Response(200, json={})))
+        ECOS(
+            "TESTKEY",
+            lang="xx",
+            transport=httpx.MockTransport(lambda r: httpx.Response(200, json={})),
+        )
 
 
 def test_unknown_cycle_raises_value_error():
