@@ -161,6 +161,27 @@ def test_transport_failure_raises_network_error(monkeypatch):
     assert len(attempts) == 3  # a transient failure is retried up to the limit
 
 
+def test_mid_read_failure_raises_network_error(monkeypatch):
+    # A failure while RECEIVING the body (httpx.ReadError, not a connect-phase error)
+    # is still an httpx.HTTPError, so it surfaces as ECOSNetworkError -- retried and
+    # detached, never a raw error -- and even a key-bearing request cannot leak.
+    import pyecos._transport as transport
+
+    monkeypatch.setattr(transport, "_RETRY_BACKOFF_SECONDS", 0)
+    attempts = []
+
+    def fail(request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        raise httpx.ReadError("read interrupted", request=request)
+
+    ecos = ECOS(_LEAK_KEY, transport=httpx.MockTransport(fail))
+    with pytest.raises(ECOSNetworkError) as caught:
+        ecos.fetch_series("722Y001")
+    assert len(attempts) == 3
+    assert caught.value.__context__ is None and caught.value.__cause__ is None
+    _assert_key_absent_from_chain(caught.value)
+
+
 # A key with reserved characters, so its raw and url-encoded forms differ and a
 # redaction that misses one is caught.
 _LEAK_KEY = "raw+key/with==specials"

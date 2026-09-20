@@ -28,7 +28,9 @@ class ECOSResponseError(ECOSError):
     """ECOS returned a well-formed response carrying an error code.
 
     ``code`` and ``message`` are the vendor's own, so a caller can branch on the
-    code without parsing the message text.
+    code without parsing the message text. A malformed response that could not be
+    parsed (not JSON, not UTF-8, or nested too deep to decode) also surfaces as this
+    error, with the sentinel ``code`` ``"UNKNOWN"``.
     """
 
     def __init__(self, code: str, message: str) -> None:
@@ -63,8 +65,8 @@ class ECOSNetworkError(ECOSError):
     """The request failed at the transport or HTTP layer.
 
     A timeout, DNS failure, connection reset, or a non-success HTTP status that ECOS
-    never turned into a RESULT body. A transport error (timeout/reset) is chained as
-    ``__cause__``; a non-success HTTP status is not, because httpx builds that error's
-    message from the request URL, which carries the API key as a path segment (the
-    message is redacted before it reaches this error).
+    never turned into a RESULT body. The underlying transport exception is deliberately
+    NOT chained: httpx builds its message from the request URL, which carries the API
+    key as a path segment, so surfacing it on ``__cause__``/``__context__`` would expose
+    the key to a logger that walks the chain.
     """

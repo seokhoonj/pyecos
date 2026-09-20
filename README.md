@@ -54,6 +54,7 @@ from pyecos import ECOS
 
 ecos = ECOS()                                              # 저장해둔 키를 자동으로 찾습니다
 rows = ecos.rate.base.fetch(start="202001", end="202412")  # 기준금리, 2020~2024년 월별
+print(rows[:3])                                            # 앞의 3개만 찍어 확인
 ```
 
 결과는 `dict`의 목록(`list`)이라, 표(DataFrame)로 한 줄에 바뀝니다. (pandas는 필수가 아닙니다.)
@@ -555,7 +556,7 @@ Claude Code는 바로 인식하고, Codex는 재시작해야 로딩됩니다.
 | `ECOSConfigError` | API 키를 찾지 못했을 때 |
 | `ECOSAuthError` | ECOS가 키를 거부했을 때 |
 | `ECOSRateLimitError` | 너무 자주 불러 제한됐을 때 (ERROR-602) |
-| `ECOSResponseError` | ECOS가 오류 코드를 돌려줬을 때 (`.code`·`.message` 포함) |
+| `ECOSResponseError` | ECOS가 오류 코드를 돌려주거나, 응답 본문이 올바른 UTF-8 JSON이 아닐 때 (`.code`·`.message`; 후자는 `.code`가 `"UNKNOWN"`) |
 | `ECOSNetworkError` | 네트워크가 끝내 안 됐을 때 (일시적 오류는 재시도 후) |
 
 모두 `ECOSError`의 하위입니다. 조회 결과가 없을 뿐이면 오류가 아니라 빈 목록으로 옵니다.

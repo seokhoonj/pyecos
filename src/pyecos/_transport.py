@@ -181,8 +181,11 @@ def _redact_key(text: str, api_key: str) -> str:
 
     ECOS carries the key as a URL path segment, and httpx's ``HTTPStatusError`` message
     is built from ``response.url``, so an error string can embed the key -- in its raw
-    form and, since the URL is url-encoded, in its ``quote``d form. Replace both.
+    form and, since the URL is url-encoded, in its ``quote``d form. Replace both. (An
+    empty key would splice ``<key>`` between every character, so guard it.)
     """
+    if not api_key:
+        return text
     return text.replace(api_key, "<key>").replace(quote(api_key, safe=""), "<key>")
 
 

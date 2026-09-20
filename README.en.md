@@ -58,6 +58,7 @@ from pyecos import ECOS
 
 ecos = ECOS()                                              # finds your saved key
 rows = ecos.rate.base.fetch(start="202001", end="202412")  # base rate, monthly 2020-2024
+print(rows[:3])                                            # print the first three to check
 ```
 
 Returns are a `list` of `dict`, so a table (DataFrame) is one line away (pandas optional).
@@ -559,7 +560,7 @@ match.
 | `ECOSConfigError` | No API key was found |
 | `ECOSAuthError` | ECOS rejected the key |
 | `ECOSRateLimitError` | Called too often and throttled (ERROR-602) |
-| `ECOSResponseError` | ECOS returned an error code (carries `.code` / `.message`) |
+| `ECOSResponseError` | ECOS returned an error code, or the response body was not valid UTF-8 JSON (carries `.code` / `.message`; the latter case has `.code` `"UNKNOWN"`) |
 | `ECOSNetworkError` | The request never completed (after retrying transient errors) |
 
 All derive from `ECOSError`. A query that simply has no data is not an error — it returns
